@@ -3,6 +3,7 @@ import Toybox.Lang;
 import Toybox.System;
 import Toybox.Time;
 import Toybox.WatchUi;
+import Toybox.Math;
 
 class WatchFaceView extends WatchUi.WatchFace {
 
@@ -14,6 +15,20 @@ class WatchFaceView extends WatchUi.WatchFace {
     private const DATE_GAP = -10;
     private const DATE_VERTICAL_OFFSET = 12;
     private const DATE_DIGIT_SPACING = -10;
+    
+    private var digitSpacing as Number = 0;
+    private var lineSpacing as Number = 0;
+    private var minutesVerticalOffset as Number = 0;
+    private var timeBlockShift as Number = 0;
+    private var dateMargin as Number = 0;
+    private var dateGap as Number = 0;
+    private var dateVerticalOffset as Number = 0;
+    private var dateDigitSpacing as Number = 0;
+    private var layoutScale as Number = 1;
+
+    private function roundScaled(n) as Number {
+        return (Math.floor(n + 0.5)) as Number;
+    }
     private const WEEKDAY_RESOURCE_IDS = [
         Rez.Drawables.Weekday1,
         Rez.Drawables.Weekday2,
@@ -73,6 +88,27 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var cachedDayHeight as Number;
     private var cachedWeekdayIndex as Number;
     private var cachedMonthIndex as Number;
+    private var cachedMoonPhaseIndex as Number;
+    private var moonPhaseBitmaps as Array<WatchUi.BitmapResource>;
+
+    private const NEW_MOON_EPOCH = 947182440; // seconds since Unix epoch
+    private const SYNODIC_MONTH_DAYS = 29.530588853; // mean synodic month length
+    private const MOON_PHASE_RES_IDS = [
+        Rez.Drawables.MoonPhase00,
+        Rez.Drawables.MoonPhase01,
+        Rez.Drawables.MoonPhase02,
+        Rez.Drawables.MoonPhase03,
+        Rez.Drawables.MoonPhase04,
+        Rez.Drawables.MoonPhase05,
+        Rez.Drawables.MoonPhase06,
+        Rez.Drawables.MoonPhase07,
+        Rez.Drawables.MoonPhase08,
+        Rez.Drawables.MoonPhase09,
+        Rez.Drawables.MoonPhase10,
+        Rez.Drawables.MoonPhase11,
+        Rez.Drawables.MoonPhase12,
+        Rez.Drawables.MoonPhase13
+    ];
 
     function initialize() {
         WatchFace.initialize();
@@ -99,6 +135,8 @@ class WatchFaceView extends WatchUi.WatchFace {
         cachedDayHeight = 0;
         cachedWeekdayIndex = -1;
         cachedMonthIndex = -1;
+        cachedMoonPhaseIndex = -1;
+        moonPhaseBitmaps = [] as Array<WatchUi.BitmapResource>;
 
         digitLookup = {
             "0" => 0,
@@ -115,6 +153,21 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function onLayout(dc as Dc) as Void {
+        var w = dc.getWidth();
+        var h = dc.getHeight();
+        var baseSize = 280.0; 
+        layoutScale = (((w < h) ? w : h) / baseSize) as Number;
+        if (layoutScale <= 0) { layoutScale = 1; }
+
+        digitSpacing = roundScaled(DIGIT_SPACING * layoutScale);
+        lineSpacing = roundScaled(LINE_SPACING * layoutScale);
+        minutesVerticalOffset = roundScaled(MINUTES_VERTICAL_OFFSET * layoutScale);
+        timeBlockShift = roundScaled(TIME_BLOCK_SHIFT * layoutScale);
+        var scaledMargin = DATE_MARGIN * layoutScale;
+        dateMargin = roundScaled((scaledMargin < 12) ? 12 : scaledMargin); // keep a minimum margin
+        dateGap = roundScaled(DATE_GAP * layoutScale);
+        dateVerticalOffset = roundScaled(DATE_VERTICAL_OFFSET * layoutScale);
+        dateDigitSpacing = roundScaled(DATE_DIGIT_SPACING * layoutScale);
         digitBitmaps = [] as Array<WatchUi.BitmapResource>;
         digitWidths = [] as Array<Number>;
         digitHeights = [] as Array<Number>;
@@ -123,6 +176,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         dateDigitWidths = [] as Array<Number>;
         dateDigitHeights = [] as Array<Number>;
         monthBitmaps = [] as Array<WatchUi.BitmapResource>;
+        moonPhaseBitmaps = [] as Array<WatchUi.BitmapResource>;
 
         digitBitmaps.add(WatchUi.loadResource(Rez.Drawables.Digit0) as WatchUi.BitmapResource);
         digitBitmaps.add(WatchUi.loadResource(Rez.Drawables.Digit1) as WatchUi.BitmapResource);
@@ -154,6 +208,14 @@ class WatchFaceView extends WatchUi.WatchFace {
 
         for (var i = 0; i < MONTH_RESOURCE_IDS.size(); ++i) {
             monthBitmaps.add(WatchUi.loadResource(MONTH_RESOURCE_IDS[i]) as WatchUi.BitmapResource);
+        }
+
+        for (var i = 0; i < MOON_PHASE_RES_IDS.size(); ++i) {
+            try {
+                var bmp = WatchUi.loadResource(MOON_PHASE_RES_IDS[i]) as WatchUi.BitmapResource;
+                moonPhaseBitmaps.add(bmp);
+            } catch(e) {
+            }
         }
     }
 
@@ -220,20 +282,37 @@ class WatchFaceView extends WatchUi.WatchFace {
 
         var hasDateBitmaps = weekdayBitmaps.size() > 0 && dateDigitBitmaps.size() == DATE_DIGIT_RESOURCE_IDS.size() && monthBitmaps.size() > 0 && cachedDayString != "" && cachedWeekdayIndex >= 0 && cachedMonthIndex >= 0;
 
+        if (minuteChanged || cachedMoonPhaseIndex < 0) {
+            cachedMoonPhaseIndex = getMoonPhaseIndex();
+        }
+
+        var hasMoonPhases = moonPhaseBitmaps.size() == MOON_PHASE_RES_IDS.size() && cachedMoonPhaseIndex >= 0 && cachedMoonPhaseIndex < moonPhaseBitmaps.size();
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-    var totalHeight = cachedHoursHeight + cachedMinutesHeight + LINE_SPACING + MINUTES_VERTICAL_OFFSET;
-    var startY = (height - totalHeight) / 2 - 15 + TIME_BLOCK_SHIFT;
+    var totalHeight = cachedHoursHeight + cachedMinutesHeight + lineSpacing + minutesVerticalOffset;
+    var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
 
-        drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, cachedHoursHeight);
-        drawDigitLine(dc, cachedMinutesString, startY + cachedHoursHeight + LINE_SPACING + MINUTES_VERTICAL_OFFSET, cachedMinutesWidth, cachedMinutesHeight);
+        if (hasMoonPhases) {
+            var moonBmp = moonPhaseBitmaps[cachedMoonPhaseIndex];
+            var margin = roundScaled(4);
+            if (margin < 3) { margin = 3; }
+            if (margin > 5) { margin = 5; }
+            var moonX = margin as Number;
+            var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(8 * layoutScale) : 0;
+            var moonY = (roundScaled((height - moonBmp.getHeight()) / 2) - verticalBias) as Number;
+            dc.drawBitmap(moonX, moonY, moonBmp);
+        }
+
+    drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, cachedHoursHeight);
+    drawDigitLine(dc, cachedMinutesString, startY + cachedHoursHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth, cachedMinutesHeight);
 
         if (hasDateBitmaps) {
             var weekdayBitmap = weekdayBitmaps[cachedWeekdayIndex];
             var monthBitmap = monthBitmaps[cachedMonthIndex];
             var monthWidth = monthBitmap.getWidth();
 
-            var dateRight = dc.getWidth() - DATE_MARGIN;
+            var dateRight = dc.getWidth() - dateMargin;
 
             var symbolHeight = weekdayBitmap.getHeight();
             var symbolWidth = weekdayBitmap.getWidth();
@@ -248,21 +327,21 @@ class WatchFaceView extends WatchUi.WatchFace {
             }
 
             var dateLeft = dateRight - maxWidth;
-            var dateCenter = dateLeft + maxWidth / 2.0;
+            var dateCenter = dateLeft + roundScaled(maxWidth / 2.0);
 
-            var symbolLeft = dateCenter - symbolWidth / 2.0;
-            var dayLeft = dateCenter - cachedDayWidth / 2.0;
-            var monthLeft = dateCenter - monthWidth / 2.0;
+            var symbolLeft = dateCenter - roundScaled(symbolWidth / 2.0);
+            var dayLeft = dateCenter - roundScaled(cachedDayWidth / 2.0);
+            var monthLeft = dateCenter - roundScaled(monthWidth / 2.0);
 
-            var dayCenterY = (height / 2.0) + DATE_VERTICAL_OFFSET;
-            var dayTop = dayCenterY - (dayHeight / 2.0);
+            var dayCenterY = roundScaled(height / 2.0) + dateVerticalOffset;
+            var dayTop = dayCenterY - roundScaled(dayHeight / 2.0);
 
-            var symbolTop = dayTop - DATE_GAP - symbolHeight;
-            var monthTop = dayTop + dayHeight + DATE_GAP + 3;
+            var symbolTop = dayTop - dateGap - symbolHeight;
+            var monthTop = dayTop + dayHeight + dateGap + roundScaled(3 * layoutScale);
 
-            dc.drawBitmap(symbolLeft, symbolTop, weekdayBitmap);
-            drawDateDigitLine(dc, cachedDayString, dayLeft, dayTop, cachedDayWidth, cachedDayHeight);
-            dc.drawBitmap(monthLeft, monthTop, monthBitmap);
+            dc.drawBitmap(symbolLeft as Number, symbolTop as Number, weekdayBitmap);
+            drawDateDigitLine(dc, cachedDayString, dayLeft as Number, dayTop as Number, cachedDayWidth, cachedDayHeight);
+            dc.drawBitmap(monthLeft as Number, monthTop as Number, monthBitmap);
         }
     }
 
@@ -303,7 +382,7 @@ class WatchFaceView extends WatchUi.WatchFace {
 
             totalWidth += w;
             if (i < length - 1) {
-                totalWidth += DIGIT_SPACING;
+                totalWidth += digitSpacing;
             }
 
             if (h > maxHeight) {
@@ -318,7 +397,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function drawDigitLine(dc as Dc, text as String, top, lineWidth as Number, lineHeight as Number) as Void {
-        var startX = (dc.getWidth() - lineWidth) / 2;
+    var startX = roundScaled((dc.getWidth() - lineWidth) / 2);
         var length = text.length();
 
         for (var i = 0; i < length; ++i) {
@@ -326,13 +405,13 @@ class WatchFaceView extends WatchUi.WatchFace {
             var idx = digitLookup[digitChar];
             var bmp = digitBitmaps[idx];
             var bmpHeight = digitHeights[idx];
-            var drawY = top + (lineHeight - bmpHeight) / 2;
+            var drawY = top + roundScaled((lineHeight - bmpHeight) / 2.0);
 
             dc.drawBitmap(startX, drawY, bmp);
 
             startX += digitWidths[idx];
             if (i < length - 1) {
-                startX += DIGIT_SPACING;
+                startX += digitSpacing;
             }
         }
     }
@@ -355,7 +434,7 @@ class WatchFaceView extends WatchUi.WatchFace {
 
             totalWidth += w;
             if (i < length - 1) {
-                totalWidth += DATE_DIGIT_SPACING;
+                totalWidth += dateDigitSpacing;
             }
 
             if (h > maxHeight) {
@@ -370,7 +449,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function drawDateDigitLine(dc as Dc, text as String, leftX, top, lineWidth as Number, lineHeight as Number) as Void {
-        var startX = leftX;
+    var startX = leftX as Number;
         var length = text.length();
 
         for (var i = 0; i < length; ++i) {
@@ -384,14 +463,35 @@ class WatchFaceView extends WatchUi.WatchFace {
             var indexNumber = idx as Number;
             var bmp = dateDigitBitmaps[indexNumber];
             var bmpHeight = dateDigitHeights[indexNumber];
-            var drawY = top + (lineHeight - bmpHeight) / 2;
+            var drawY = top + roundScaled((lineHeight - bmpHeight) / 2.0);
 
             dc.drawBitmap(startX, drawY, bmp);
 
             startX += dateDigitWidths[indexNumber];
             if (i < length - 1) {
-                startX += DATE_DIGIT_SPACING;
+                startX += dateDigitSpacing;
             }
         }
+    }
+
+    function getMoonPhaseIndex() as Number {
+        var nowMoment = Time.now();
+        var nowSecs = 0.0;
+        if (nowMoment != null) {
+            nowSecs = nowMoment.value();
+        }
+        var daysSince = (nowSecs - NEW_MOON_EPOCH) / 86400.0;
+        var cycles = daysSince / SYNODIC_MONTH_DAYS;
+        var fracCycles = cycles - Math.floor(cycles);
+        if (fracCycles < 0) { fracCycles += 1; }
+
+        var phaseCount = MOON_PHASE_RES_IDS.size();
+        var rawSlotFloat = fracCycles * phaseCount;
+        var rawSlot = 0;
+        while (rawSlot + 1 <= rawSlotFloat && rawSlot + 1 < phaseCount) {
+            rawSlot += 1;
+        }
+        if (rawSlot >= phaseCount) { rawSlot = 0; }
+        return rawSlot;
     }
 }

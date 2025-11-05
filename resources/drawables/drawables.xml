@@ -39,4 +39,19 @@
     <bitmap id="Month10" filename="date/month_10.png" />
     <bitmap id="Month11" filename="date/month_11.png" />
     <bitmap id="Month12" filename="date/month_12.png" />
+    <!-- Moon phase images (equatorial orientation). Reduced to 14 distinct phases (0..13), full moon is phase 07. -->
+    <bitmap id="MoonPhase00" filename="moon/moon_phase_00.png" />
+    <bitmap id="MoonPhase01" filename="moon/moon_phase_01.png" />
+    <bitmap id="MoonPhase02" filename="moon/moon_phase_02.png" />
+    <bitmap id="MoonPhase03" filename="moon/moon_phase_03.png" />
+    <bitmap id="MoonPhase04" filename="moon/moon_phase_04.png" />
+    <bitmap id="MoonPhase05" filename="moon/moon_phase_05.png" />
+    <bitmap id="MoonPhase06" filename="moon/moon_phase_06.png" />
+    <bitmap id="MoonPhase07" filename="moon/moon_phase_07.png" />
+    <bitmap id="MoonPhase08" filename="moon/moon_phase_08.png" />
+    <bitmap id="MoonPhase09" filename="moon/moon_phase_09.png" />
+    <bitmap id="MoonPhase10" filename="moon/moon_phase_10.png" />
+    <bitmap id="MoonPhase11" filename="moon/moon_phase_11.png" />
+    <bitmap id="MoonPhase12" filename="moon/moon_phase_12.png" />
+    <bitmap id="MoonPhase13" filename="moon/moon_phase_13.png" />
 </drawables>
