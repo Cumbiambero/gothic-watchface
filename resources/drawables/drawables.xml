@@ -10,4 +10,33 @@
     <bitmap id="Digit7" filename="digits/digit_7.png" />
     <bitmap id="Digit8" filename="digits/digit_8.png" />
     <bitmap id="Digit9" filename="digits/digit_9.png" />
+    <bitmap id="Weekday1" filename="date/weekday_1.png" />
+    <bitmap id="Weekday2" filename="date/weekday_2.png" />
+    <bitmap id="Weekday3" filename="date/weekday_3.png" />
+    <bitmap id="Weekday4" filename="date/weekday_4.png" />
+    <bitmap id="Weekday5" filename="date/weekday_5.png" />
+    <bitmap id="Weekday6" filename="date/weekday_6.png" />
+    <bitmap id="Weekday7" filename="date/weekday_7.png" />
+    <bitmap id="DateDigit0" filename="date/digit_0.png" />
+    <bitmap id="DateDigit1" filename="date/digit_1.png" />
+    <bitmap id="DateDigit2" filename="date/digit_2.png" />
+    <bitmap id="DateDigit3" filename="date/digit_3.png" />
+    <bitmap id="DateDigit4" filename="date/digit_4.png" />
+    <bitmap id="DateDigit5" filename="date/digit_5.png" />
+    <bitmap id="DateDigit6" filename="date/digit_6.png" />
+    <bitmap id="DateDigit7" filename="date/digit_7.png" />
+    <bitmap id="DateDigit8" filename="date/digit_8.png" />
+    <bitmap id="DateDigit9" filename="date/digit_9.png" />
+    <bitmap id="Month01" filename="date/month_01.png" />
+    <bitmap id="Month02" filename="date/month_02.png" />
+    <bitmap id="Month03" filename="date/month_03.png" />
+    <bitmap id="Month04" filename="date/month_04.png" />
+    <bitmap id="Month05" filename="date/month_05.png" />
+    <bitmap id="Month06" filename="date/month_06.png" />
+    <bitmap id="Month07" filename="date/month_07.png" />
+    <bitmap id="Month08" filename="date/month_08.png" />
+    <bitmap id="Month09" filename="date/month_09.png" />
+    <bitmap id="Month10" filename="date/month_10.png" />
+    <bitmap id="Month11" filename="date/month_11.png" />
+    <bitmap id="Month12" filename="date/month_12.png" />
 </drawables>
