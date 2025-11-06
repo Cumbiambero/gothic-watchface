@@ -90,6 +90,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var cachedMonthIndex as Number;
     private var cachedMoonPhaseIndex as Number;
     private var moonPhaseBitmaps as Array<WatchUi.BitmapResource>;
+    private var inSleep as Boolean = false;
 
     private const NEW_MOON_EPOCH = 947182440; // seconds since Unix epoch
     private const SYNODIC_MONTH_DAYS = 29.530588853; // mean synodic month length
@@ -121,6 +122,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         dateDigitWidths = [] as Array<Number>;
         dateDigitHeights = [] as Array<Number>;
         monthBitmaps = [] as Array<WatchUi.BitmapResource>;
+        moonPhaseBitmaps = [] as Array<WatchUi.BitmapResource>;
         cachedHourValue = -1;
         cachedMinuteValue = -1;
         cachedHoursString = "";
@@ -136,8 +138,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         cachedWeekdayIndex = -1;
         cachedMonthIndex = -1;
         cachedMoonPhaseIndex = -1;
-        moonPhaseBitmaps = [] as Array<WatchUi.BitmapResource>;
-
+        
         digitLookup = {
             "0" => 0,
             "1" => 1,
@@ -157,14 +158,16 @@ class WatchFaceView extends WatchUi.WatchFace {
         var h = dc.getHeight();
         var baseSize = 280.0; 
         layoutScale = (((w < h) ? w : h) / baseSize) as Number;
-        if (layoutScale <= 0) { layoutScale = 1; }
+        if (layoutScale <= 0) { 
+            layoutScale = 1;
+        }
 
         digitSpacing = roundScaled(DIGIT_SPACING * layoutScale);
         lineSpacing = roundScaled(LINE_SPACING * layoutScale);
         minutesVerticalOffset = roundScaled(MINUTES_VERTICAL_OFFSET * layoutScale);
         timeBlockShift = roundScaled(TIME_BLOCK_SHIFT * layoutScale);
         var scaledMargin = DATE_MARGIN * layoutScale;
-        dateMargin = roundScaled((scaledMargin < 12) ? 12 : scaledMargin); // keep a minimum margin
+        dateMargin = roundScaled((scaledMargin < 12) ? 12 : scaledMargin);
         dateGap = roundScaled(DATE_GAP * layoutScale);
         dateVerticalOffset = roundScaled(DATE_VERTICAL_OFFSET * layoutScale);
         dateDigitSpacing = roundScaled(DATE_DIGIT_SPACING * layoutScale);
@@ -233,7 +236,15 @@ class WatchFaceView extends WatchUi.WatchFace {
         var hourChanged = (clockTime.hour != cachedHourValue);
         if (hourChanged) {
             cachedHourValue = clockTime.hour;
-            cachedHoursString = cachedHourValue.format("%02d");
+            var displayHour = cachedHourValue;
+            var settings = System.getDeviceSettings();
+            if (settings != null && !settings.is24Hour) {
+                displayHour = displayHour % 12;
+                if (displayHour == 0) {
+                    displayHour = 12;
+                }
+            }
+            cachedHoursString = displayHour.format("%02d");
             var hoursMetrics = getLineMetrics(cachedHoursString);
             cachedHoursWidth = hoursMetrics["width"];
             cachedHoursHeight = hoursMetrics["height"];
@@ -248,7 +259,8 @@ class WatchFaceView extends WatchUi.WatchFace {
             cachedMinutesHeight = minutesMetrics["height"];
         }
 
-        var needsDateUpdate = minuteChanged || cachedDayValue == -1 || cachedWeekdayIndex == -1 || cachedMonthIndex == -1;
+        var needsDateUpdate = hourChanged || cachedDayValue == -1 || cachedWeekdayIndex == -1 || cachedMonthIndex == -1;
+        var dayChanged = false;
         if (needsDateUpdate) {
             var infoShort = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT) as Time.Gregorian.Info;
 
@@ -265,13 +277,10 @@ class WatchFaceView extends WatchUi.WatchFace {
             cachedMonthIndex = monthIndex;
 
             var dayNumber = getNumberValue(infoShort.day, 1);
-            if (dayNumber < 1) {
-                dayNumber = 1;
-            } else if (dayNumber > 31) {
-                dayNumber = 31;
-            }
+            if (dayNumber < 1) { dayNumber = 1; } else if (dayNumber > 31) { dayNumber = 31; }
 
             if (dayNumber != cachedDayValue) {
+                dayChanged = true;
                 cachedDayValue = dayNumber;
                 cachedDayString = dayNumber.format("%d");
                 var dayMetrics = getDateDigitLineMetrics(cachedDayString);
@@ -282,7 +291,7 @@ class WatchFaceView extends WatchUi.WatchFace {
 
         var hasDateBitmaps = weekdayBitmaps.size() > 0 && dateDigitBitmaps.size() == DATE_DIGIT_RESOURCE_IDS.size() && monthBitmaps.size() > 0 && cachedDayString != "" && cachedWeekdayIndex >= 0 && cachedMonthIndex >= 0;
 
-        if (minuteChanged || cachedMoonPhaseIndex < 0) {
+        if (dayChanged || cachedMoonPhaseIndex < 0) {
             cachedMoonPhaseIndex = getMoonPhaseIndex();
         }
 
@@ -290,10 +299,10 @@ class WatchFaceView extends WatchUi.WatchFace {
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-    var totalHeight = cachedHoursHeight + cachedMinutesHeight + lineSpacing + minutesVerticalOffset;
-    var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
+        var totalHeight = cachedHoursHeight + cachedMinutesHeight + lineSpacing + minutesVerticalOffset;
+        var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
 
-        if (hasMoonPhases) {
+        if (hasMoonPhases && !inSleep) {
             var moonBmp = moonPhaseBitmaps[cachedMoonPhaseIndex];
             var margin = roundScaled(4);
             if (margin < 3) { margin = 3; }
@@ -304,8 +313,8 @@ class WatchFaceView extends WatchUi.WatchFace {
             dc.drawBitmap(moonX, moonY, moonBmp);
         }
 
-    drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, cachedHoursHeight);
-    drawDigitLine(dc, cachedMinutesString, startY + cachedHoursHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth, cachedMinutesHeight);
+        drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, cachedHoursHeight);
+        drawDigitLine(dc, cachedMinutesString, startY + cachedHoursHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth,    cachedMinutesHeight);
 
         if (hasDateBitmaps) {
             var weekdayBitmap = weekdayBitmaps[cachedWeekdayIndex];
@@ -364,9 +373,24 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function onExitSleep() as Void {
+        inSleep = false;
+        invalidateAllCaches();
     }
 
     function onEnterSleep() as Void {
+        inSleep = true;
+    }
+
+    function invalidateAllCaches() as Void {
+        cachedHourValue = -1;
+        cachedMinuteValue = -1;
+        cachedHoursString = "";
+        cachedMinutesString = "";
+        cachedDayValue = -1;
+        cachedDayString = "";
+        cachedWeekdayIndex = -1;
+        cachedMonthIndex = -1;
+        cachedMoonPhaseIndex = -1;
     }
 
     function getLineMetrics(text as String) as Dictionary {
@@ -397,23 +421,8 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function drawDigitLine(dc as Dc, text as String, top, lineWidth as Number, lineHeight as Number) as Void {
-    var startX = roundScaled((dc.getWidth() - lineWidth) / 2);
-        var length = text.length();
-
-        for (var i = 0; i < length; ++i) {
-            var digitChar = text.substring(i, i + 1);
-            var idx = digitLookup[digitChar];
-            var bmp = digitBitmaps[idx];
-            var bmpHeight = digitHeights[idx];
-            var drawY = top + roundScaled((lineHeight - bmpHeight) / 2.0);
-
-            dc.drawBitmap(startX, drawY, bmp);
-
-            startX += digitWidths[idx];
-            if (i < length - 1) {
-                startX += digitSpacing;
-            }
-        }
+        var startX = roundScaled((dc.getWidth() - lineWidth) / 2);
+        drawBitmapDigits(dc, text, startX, top, lineHeight, digitBitmaps, digitWidths, digitHeights, digitSpacing);
     }
 
     function getDateDigitLineMetrics(text as String) as Dictionary {
@@ -449,27 +458,29 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function drawDateDigitLine(dc as Dc, text as String, leftX, top, lineWidth as Number, lineHeight as Number) as Void {
-    var startX = leftX as Number;
-        var length = text.length();
+        var startX = leftX as Number;
+        drawBitmapDigits(dc, text, startX, top, lineHeight, dateDigitBitmaps, dateDigitWidths, dateDigitHeights, dateDigitSpacing);
+    }
 
+    function drawBitmapDigits(dc as Dc, text as String, startX as Number, top as Number, lineHeight as Number,
+            bitmaps as Array<WatchUi.BitmapResource>, widths as Array<Number>, heights as Array<Number>, spacing as Number) as Void {
+        var length = text.length();
         for (var i = 0; i < length; ++i) {
             var digitChar = text.substring(i, i + 1);
             var idx = digitLookup.get(digitChar);
+
             if (idx == null) {
                 continue;
             }
 
-
             var indexNumber = idx as Number;
-            var bmp = dateDigitBitmaps[indexNumber];
-            var bmpHeight = dateDigitHeights[indexNumber];
+            var bmp = bitmaps[indexNumber];
+            var bmpHeight = heights[indexNumber];
             var drawY = top + roundScaled((lineHeight - bmpHeight) / 2.0);
-
             dc.drawBitmap(startX, drawY, bmp);
-
-            startX += dateDigitWidths[indexNumber];
+            startX += widths[indexNumber];
             if (i < length - 1) {
-                startX += dateDigitSpacing;
+                startX += spacing;
             }
         }
     }
@@ -477,13 +488,18 @@ class WatchFaceView extends WatchUi.WatchFace {
     function getMoonPhaseIndex() as Number {
         var nowMoment = Time.now();
         var nowSecs = 0.0;
+        
         if (nowMoment != null) {
             nowSecs = nowMoment.value();
         }
+
         var daysSince = (nowSecs - NEW_MOON_EPOCH) / 86400.0;
         var cycles = daysSince / SYNODIC_MONTH_DAYS;
         var fracCycles = cycles - Math.floor(cycles);
-        if (fracCycles < 0) { fracCycles += 1; }
+
+        if (fracCycles < 0) {
+            fracCycles += 1;
+        }
 
         var phaseCount = MOON_PHASE_RES_IDS.size();
         var rawSlotFloat = fracCycles * phaseCount;
