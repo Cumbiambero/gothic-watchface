@@ -14,4 +14,4 @@ Fenix 7 series and more
 No personal data collected, stored, or transmitted.
 
 ## License
-MIT (example – update if different). Add a LICENSE file before publishing if desired.
+You can do whatever you want with this code.
