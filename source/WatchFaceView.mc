@@ -214,11 +214,8 @@ class WatchFaceView extends WatchUi.WatchFace {
         }
 
         for (var i = 0; i < MOON_PHASE_RES_IDS.size(); ++i) {
-            try {
-                var bmp = WatchUi.loadResource(MOON_PHASE_RES_IDS[i]) as WatchUi.BitmapResource;
-                moonPhaseBitmaps.add(bmp);
-            } catch(e) {
-            }
+            var bmp = WatchUi.loadResource(MOON_PHASE_RES_IDS[i]) as WatchUi.BitmapResource;
+            moonPhaseBitmaps.add(bmp);
         }
     }
 
@@ -487,26 +484,15 @@ class WatchFaceView extends WatchUi.WatchFace {
 
     function getMoonPhaseIndex() as Number {
         var nowMoment = Time.now();
-        var nowSecs = 0.0;
-        
-        if (nowMoment != null) {
-            nowSecs = nowMoment.value();
-        }
-
+        var nowSecs = (nowMoment != null) ? nowMoment.value() : 0.0;
         var daysSince = (nowSecs - NEW_MOON_EPOCH) / 86400.0;
         var cycles = daysSince / SYNODIC_MONTH_DAYS;
         var fracCycles = cycles - Math.floor(cycles);
-
         if (fracCycles < 0) {
             fracCycles += 1;
         }
-
         var phaseCount = MOON_PHASE_RES_IDS.size();
-        var rawSlotFloat = fracCycles * phaseCount;
-        var rawSlot = 0;
-        while (rawSlot + 1 <= rawSlotFloat && rawSlot + 1 < phaseCount) {
-            rawSlot += 1;
-        }
+        var rawSlot = Math.floor(fracCycles * phaseCount) as Number;
         if (rawSlot >= phaseCount) { rawSlot = 0; }
         return rawSlot;
     }
