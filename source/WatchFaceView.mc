@@ -88,28 +88,11 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var cachedDayHeight as Number;
     private var cachedWeekdayIndex as Number;
     private var cachedMonthIndex as Number;
-    private var cachedMoonPhaseIndex as Number;
-    private var moonPhaseBitmaps as Array<WatchUi.BitmapResource>;
+    private var cachedMoonPhaseFrac as Number;
     private var inSleep as Boolean = false;
 
     private const NEW_MOON_EPOCH = 947182440; // seconds since Unix epoch
     private const SYNODIC_MONTH_DAYS = 29.530588853; // mean synodic month length
-    private const MOON_PHASE_RES_IDS = [
-        Rez.Drawables.MoonPhase00,
-        Rez.Drawables.MoonPhase01,
-        Rez.Drawables.MoonPhase02,
-        Rez.Drawables.MoonPhase03,
-        Rez.Drawables.MoonPhase04,
-        Rez.Drawables.MoonPhase05,
-        Rez.Drawables.MoonPhase06,
-        Rez.Drawables.MoonPhase07,
-        Rez.Drawables.MoonPhase08,
-        Rez.Drawables.MoonPhase09,
-        Rez.Drawables.MoonPhase10,
-        Rez.Drawables.MoonPhase11,
-        Rez.Drawables.MoonPhase12,
-        Rez.Drawables.MoonPhase13
-    ];
 
     function initialize() {
         WatchFace.initialize();
@@ -122,7 +105,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         dateDigitWidths = [] as Array<Number>;
         dateDigitHeights = [] as Array<Number>;
         monthBitmaps = [] as Array<WatchUi.BitmapResource>;
-        moonPhaseBitmaps = [] as Array<WatchUi.BitmapResource>;
+        cachedMoonPhaseFrac = -1;
         cachedHourValue = -1;
         cachedMinuteValue = -1;
         cachedHoursString = "";
@@ -137,7 +120,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         cachedDayHeight = 0;
         cachedWeekdayIndex = -1;
         cachedMonthIndex = -1;
-        cachedMoonPhaseIndex = -1;
+        cachedMoonPhaseFrac = -1;
         
         digitLookup = {
             "0" => 0,
@@ -179,7 +162,6 @@ class WatchFaceView extends WatchUi.WatchFace {
         dateDigitWidths = [] as Array<Number>;
         dateDigitHeights = [] as Array<Number>;
         monthBitmaps = [] as Array<WatchUi.BitmapResource>;
-        moonPhaseBitmaps = [] as Array<WatchUi.BitmapResource>;
 
         digitBitmaps.add(WatchUi.loadResource(Rez.Drawables.Digit0) as WatchUi.BitmapResource);
         digitBitmaps.add(WatchUi.loadResource(Rez.Drawables.Digit1) as WatchUi.BitmapResource);
@@ -211,11 +193,6 @@ class WatchFaceView extends WatchUi.WatchFace {
 
         for (var i = 0; i < MONTH_RESOURCE_IDS.size(); ++i) {
             monthBitmaps.add(WatchUi.loadResource(MONTH_RESOURCE_IDS[i]) as WatchUi.BitmapResource);
-        }
-
-        for (var i = 0; i < MOON_PHASE_RES_IDS.size(); ++i) {
-            var bmp = WatchUi.loadResource(MOON_PHASE_RES_IDS[i]) as WatchUi.BitmapResource;
-            moonPhaseBitmaps.add(bmp);
         }
     }
 
@@ -288,26 +265,24 @@ class WatchFaceView extends WatchUi.WatchFace {
 
         var hasDateBitmaps = weekdayBitmaps.size() > 0 && dateDigitBitmaps.size() == DATE_DIGIT_RESOURCE_IDS.size() && monthBitmaps.size() > 0 && cachedDayString != "" && cachedWeekdayIndex >= 0 && cachedMonthIndex >= 0;
 
-        if (dayChanged || cachedMoonPhaseIndex < 0) {
-            cachedMoonPhaseIndex = getMoonPhaseIndex();
+        if (dayChanged || cachedMoonPhaseFrac < 0) {
+            cachedMoonPhaseFrac = computeMoonPhaseFraction();
         }
-
-        var hasMoonPhases = moonPhaseBitmaps.size() == MOON_PHASE_RES_IDS.size() && cachedMoonPhaseIndex >= 0 && cachedMoonPhaseIndex < moonPhaseBitmaps.size();
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
         var totalHeight = cachedHoursHeight + cachedMinutesHeight + lineSpacing + minutesVerticalOffset;
         var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
 
-        if (hasMoonPhases && !inSleep) {
-            var moonBmp = moonPhaseBitmaps[cachedMoonPhaseIndex];
+        if (cachedMoonPhaseFrac >= 0 && !inSleep) {
             var margin = roundScaled(4);
             if (margin < 3) { margin = 3; }
             if (margin > 5) { margin = 5; }
-            var moonX = margin as Number;
             var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(8 * layoutScale) : 0;
-            var moonY = (roundScaled((height - moonBmp.getHeight()) / 2) - verticalBias) as Number;
-            dc.drawBitmap(moonX, moonY, moonBmp);
+            var baseDiameter = 44.0 * layoutScale;
+            var diameter = roundScaled(baseDiameter);
+            if (diameter < 24) { diameter = 24; }
+            drawProceduralMoon(dc, margin + roundScaled(diameter / 2.0), roundScaled(height / 2.0) - verticalBias, diameter, cachedMoonPhaseFrac);
         }
 
         drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, cachedHoursHeight);
@@ -387,7 +362,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         cachedDayString = "";
         cachedWeekdayIndex = -1;
         cachedMonthIndex = -1;
-        cachedMoonPhaseIndex = -1;
+    cachedMoonPhaseFrac = -1;
     }
 
     function getLineMetrics(text as String) as Dictionary {
@@ -482,18 +457,56 @@ class WatchFaceView extends WatchUi.WatchFace {
         }
     }
 
-    function getMoonPhaseIndex() as Number {
+    function computeMoonPhaseFraction() as Number {
         var nowMoment = Time.now();
         var nowSecs = (nowMoment != null) ? nowMoment.value() : 0.0;
         var daysSince = (nowSecs - NEW_MOON_EPOCH) / 86400.0;
         var cycles = daysSince / SYNODIC_MONTH_DAYS;
-        var fracCycles = cycles - Math.floor(cycles);
-        if (fracCycles < 0) {
-            fracCycles += 1;
+        var frac = cycles - Math.floor(cycles);
+        if (frac < 0) { frac += 1; }
+        return frac as Number;
+    }
+
+    function drawProceduralMoon(dc as Dc, centerX as Number, centerY as Number, diameter as Number, phaseFrac as Number) as Void {
+        if (phaseFrac < 0) { return; }
+        if (phaseFrac >= 1) { phaseFrac -= Math.floor(phaseFrac); }
+
+        var radius = (diameter / 2.0) as Number;
+        var waxing = (phaseFrac < 0.5);
+        var progress = waxing ? (phaseFrac / 0.5) : ((1 - phaseFrac) / 0.5);
+        if (progress <= 0.02) { return; }
+
+        var r2 = radius * radius;
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+
+        for (var dx = -radius; dx <= radius; dx += 1) {
+            var x = centerX + dx;
+            var inner = r2 - (dx * dx);
+            if (inner < 0) { continue; }
+            var halfHeight = Math.sqrt(inner);
+            var topY = centerY - halfHeight;
+            var bottomY = centerY + halfHeight;
+
+            var yStart;
+            var yEnd;
+            if (waxing) {
+                var visibleHeight = (2 * halfHeight * progress);
+                yEnd = bottomY;
+                yStart = bottomY - visibleHeight;
+                if (yStart < topY) { yStart = topY; }
+            } else {
+                var progress2 = (phaseFrac - 0.5) / 0.5;
+                var visibleHeight2 = (2 * halfHeight * (1 - progress2));
+                yStart = topY;
+                yEnd = topY + visibleHeight2;
+                if (yEnd > bottomY) { yEnd = bottomY; }
+            }
+
+            if (yEnd > yStart) {
+                dc.drawLine(x, yStart, x, yEnd);
+            }
         }
-        var phaseCount = MOON_PHASE_RES_IDS.size();
-        var rawSlot = Math.floor(fracCycles * phaseCount) as Number;
-        if (rawSlot >= phaseCount) { rawSlot = 0; }
-        return rawSlot;
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawCircle(centerX, centerY, radius);
     }
 }
