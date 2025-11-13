@@ -279,7 +279,8 @@ class WatchFaceView extends WatchUi.WatchFace {
             if (margin < 3) { margin = 3; }
             if (margin > 5) { margin = 5; }
             var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(8 * layoutScale) : 0;
-            var baseDiameter = 44.0 * layoutScale;
+            // Enlarged moon diameter for improved visibility
+            var baseDiameter = 56.0 * layoutScale;
             var diameter = roundScaled(baseDiameter);
             if (diameter < 24) { diameter = 24; }
             drawProceduralMoon(dc, margin + roundScaled(diameter / 2.0), roundScaled(height / 2.0) - verticalBias, diameter, cachedMoonPhaseFrac);
@@ -508,7 +509,5 @@ class WatchFaceView extends WatchUi.WatchFace {
                 dc.drawLine(x, yStart, x, yEnd);
             }
         }
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawCircle(centerX, centerY, radius);
     }
 }
