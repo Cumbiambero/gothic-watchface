@@ -25,7 +25,6 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var dateVerticalOffset as Number = 0;
     private var dateDigitSpacing as Number = 0;
     private var layoutScale as Number = 1;
-    private var maxDigitHeight as Number = 0; // Maximum height among all digits for stable positioning
 
     private function roundScaled(n) as Number {
         return (Math.floor(n + 0.5)) as Number;
@@ -177,13 +176,6 @@ class WatchFaceView extends WatchUi.WatchFace {
             digitHeights.add(bmp.getHeight());
         }
 
-        maxDigitHeight = 0;
-        for (var i = 0; i < digitHeights.size(); ++i) {
-            if (digitHeights[i] > maxDigitHeight) {
-                maxDigitHeight = digitHeights[i];
-            }
-        }
-
         for (var i = 0; i < WEEKDAY_RESOURCE_IDS.size(); ++i) {
             weekdayBitmaps.add(WatchUi.loadResource(WEEKDAY_RESOURCE_IDS[i]) as WatchUi.BitmapResource);
         }
@@ -275,8 +267,8 @@ class WatchFaceView extends WatchUi.WatchFace {
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-        // Use maxDigitHeight for both hours and minutes to prevent vertical bounce
-        var totalHeight = maxDigitHeight + maxDigitHeight + lineSpacing + minutesVerticalOffset;
+        var digitHeight = digitHeights[0];
+        var totalHeight = digitHeight + digitHeight + lineSpacing + minutesVerticalOffset;
         var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
 
         if (cachedMoonPhaseFrac >= 0 && !inSleep) {
@@ -284,15 +276,14 @@ class WatchFaceView extends WatchUi.WatchFace {
             if (margin < 3) { margin = 3; }
             if (margin > 5) { margin = 5; }
             var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(8 * layoutScale) : 0;
-            // Enlarged moon diameter for improved visibility
             var baseDiameter = 56.0 * layoutScale;
             var diameter = roundScaled(baseDiameter);
             if (diameter < 24) { diameter = 24; }
             drawProceduralMoon(dc, margin + roundScaled(diameter / 2.0), roundScaled(height / 2.0) - verticalBias, diameter, cachedMoonPhaseFrac);
         }
 
-        drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, maxDigitHeight);
-        drawDigitLine(dc, cachedMinutesString, startY + maxDigitHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth, maxDigitHeight);
+        drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, digitHeight);
+        drawDigitLine(dc, cachedMinutesString, startY + digitHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth, digitHeight);
 
         if (hasDateBitmaps) {
             var weekdayBitmap = weekdayBitmaps[cachedWeekdayIndex];
