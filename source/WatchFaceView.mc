@@ -474,7 +474,9 @@ class WatchFaceView extends WatchUi.WatchFace {
         var radius = (diameter / 2.0) as Number;
         var waxing = (phaseFrac < 0.5);
         var progress = waxing ? (phaseFrac / 0.5) : ((1 - phaseFrac) / 0.5);
-        if (progress <= 0.02) { return; }
+        if (progress <= 0.02) { 
+            return;
+        }
 
         var r2 = radius * radius;
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
