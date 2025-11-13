@@ -25,6 +25,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var dateVerticalOffset as Number = 0;
     private var dateDigitSpacing as Number = 0;
     private var layoutScale as Number = 1;
+    private var maxDigitHeight as Number = 0; // Maximum height among all digits for stable positioning
 
     private function roundScaled(n) as Number {
         return (Math.floor(n + 0.5)) as Number;
@@ -79,9 +80,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var cachedHoursString as String;
     private var cachedMinutesString as String;
     private var cachedHoursWidth as Number;
-    private var cachedHoursHeight as Number;
     private var cachedMinutesWidth as Number;
-    private var cachedMinutesHeight as Number;
     private var cachedDayValue as Number;
     private var cachedDayString as String;
     private var cachedDayWidth as Number;
@@ -111,9 +110,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         cachedHoursString = "";
         cachedMinutesString = "";
         cachedHoursWidth = 0;
-        cachedHoursHeight = 0;
         cachedMinutesWidth = 0;
-        cachedMinutesHeight = 0;
         cachedDayValue = -1;
         cachedDayString = "";
         cachedDayWidth = 0;
@@ -180,6 +177,13 @@ class WatchFaceView extends WatchUi.WatchFace {
             digitHeights.add(bmp.getHeight());
         }
 
+        maxDigitHeight = 0;
+        for (var i = 0; i < digitHeights.size(); ++i) {
+            if (digitHeights[i] > maxDigitHeight) {
+                maxDigitHeight = digitHeights[i];
+            }
+        }
+
         for (var i = 0; i < WEEKDAY_RESOURCE_IDS.size(); ++i) {
             weekdayBitmaps.add(WatchUi.loadResource(WEEKDAY_RESOURCE_IDS[i]) as WatchUi.BitmapResource);
         }
@@ -221,7 +225,7 @@ class WatchFaceView extends WatchUi.WatchFace {
             cachedHoursString = displayHour.format("%02d");
             var hoursMetrics = getLineMetrics(cachedHoursString);
             cachedHoursWidth = hoursMetrics["width"];
-            cachedHoursHeight = hoursMetrics["height"];
+            // Height no longer cached per-time; using maxDigitHeight for stable positioning
         }
 
         var minuteChanged = (clockTime.min != cachedMinuteValue);
@@ -230,7 +234,7 @@ class WatchFaceView extends WatchUi.WatchFace {
             cachedMinutesString = cachedMinuteValue.format("%02d");
             var minutesMetrics = getLineMetrics(cachedMinutesString);
             cachedMinutesWidth = minutesMetrics["width"];
-            cachedMinutesHeight = minutesMetrics["height"];
+            // Height no longer cached per-time; using maxDigitHeight for stable positioning
         }
 
         var needsDateUpdate = hourChanged || cachedDayValue == -1 || cachedWeekdayIndex == -1 || cachedMonthIndex == -1;
@@ -271,7 +275,8 @@ class WatchFaceView extends WatchUi.WatchFace {
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
-        var totalHeight = cachedHoursHeight + cachedMinutesHeight + lineSpacing + minutesVerticalOffset;
+        // Use maxDigitHeight for both hours and minutes to prevent vertical bounce
+        var totalHeight = maxDigitHeight + maxDigitHeight + lineSpacing + minutesVerticalOffset;
         var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
 
         if (cachedMoonPhaseFrac >= 0 && !inSleep) {
@@ -286,8 +291,8 @@ class WatchFaceView extends WatchUi.WatchFace {
             drawProceduralMoon(dc, margin + roundScaled(diameter / 2.0), roundScaled(height / 2.0) - verticalBias, diameter, cachedMoonPhaseFrac);
         }
 
-        drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, cachedHoursHeight);
-        drawDigitLine(dc, cachedMinutesString, startY + cachedHoursHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth,    cachedMinutesHeight);
+        drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, maxDigitHeight);
+        drawDigitLine(dc, cachedMinutesString, startY + maxDigitHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth, maxDigitHeight);
 
         if (hasDateBitmaps) {
             var weekdayBitmap = weekdayBitmaps[cachedWeekdayIndex];
