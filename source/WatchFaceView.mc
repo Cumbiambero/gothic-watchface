@@ -15,6 +15,10 @@ class WatchFaceView extends WatchUi.WatchFace {
     private const DATE_GAP = -10;
     private const DATE_VERTICAL_OFFSET = 12;
     private const DATE_DIGIT_SPACING = -10;
+    private const MOON_BASE_DIAMETER = 50.0;
+    private const MOON_MARGIN_RATIO = 0.08;
+    private const MOON_VERTICAL_BIAS_RATIO = 0.14;
+    private const MOON_MIN_DIAMETER_RATIO = 0.48;
     
     private var digitSpacing as Number = 0;
     private var lineSpacing as Number = 0;
@@ -217,7 +221,6 @@ class WatchFaceView extends WatchUi.WatchFace {
             cachedHoursString = displayHour.format("%02d");
             var hoursMetrics = getLineMetrics(cachedHoursString);
             cachedHoursWidth = hoursMetrics["width"];
-            // Height no longer cached per-time; using maxDigitHeight for stable positioning
         }
 
         var minuteChanged = (clockTime.min != cachedMinuteValue);
@@ -226,7 +229,6 @@ class WatchFaceView extends WatchUi.WatchFace {
             cachedMinutesString = cachedMinuteValue.format("%02d");
             var minutesMetrics = getLineMetrics(cachedMinutesString);
             cachedMinutesWidth = minutesMetrics["width"];
-            // Height no longer cached per-time; using maxDigitHeight for stable positioning
         }
 
         var needsDateUpdate = hourChanged || cachedDayValue == -1 || cachedWeekdayIndex == -1 || cachedMonthIndex == -1;
@@ -272,13 +274,14 @@ class WatchFaceView extends WatchUi.WatchFace {
         var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
 
         if (cachedMoonPhaseFrac >= 0 && !inSleep) {
-            var margin = roundScaled(4);
+            var baseDiameter = MOON_BASE_DIAMETER * layoutScale;
+            var margin = roundScaled(baseDiameter * MOON_MARGIN_RATIO);
             if (margin < 3) { margin = 3; }
-            if (margin > 5) { margin = 5; }
-            var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(8 * layoutScale) : 0;
-            var baseDiameter = 56.0 * layoutScale;
+            if (margin > 8) { margin = 8; }
+            var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(baseDiameter * MOON_VERTICAL_BIAS_RATIO) : 0;
             var diameter = roundScaled(baseDiameter);
-            if (diameter < 24) { diameter = 24; }
+            var minDiameter = roundScaled(MOON_BASE_DIAMETER * MOON_MIN_DIAMETER_RATIO);
+            if (diameter < minDiameter) { diameter = minDiameter; }
             drawProceduralMoon(dc, margin + roundScaled(diameter / 2.0), roundScaled(height / 2.0) - verticalBias, diameter, cachedMoonPhaseFrac);
         }
 
