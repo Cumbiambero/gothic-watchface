@@ -7,13 +7,13 @@ A minimalist, gothic style Garmin Connect IQ watch face showing:
 - Weekday (as astronomical symbol), day of month, numeric month (roman)
 - Moon phase (approximation)
 
-## Changeslog
+## Changelog
 
 ### 1.0.0
 - Initial version
 
-### 1.0.1
-- Show more accurate moonphase (no longer an image)
+### 1.1.0
+- Show more accurate moon phase (no longer an image)
 - Fix bouncing hour
 
 ## Supported Devices
