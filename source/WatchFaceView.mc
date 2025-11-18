@@ -19,6 +19,8 @@ class WatchFaceView extends WatchUi.WatchFace {
     private const MOON_MARGIN_RATIO = 0.08;
     private const MOON_VERTICAL_BIAS_RATIO = 0.14;
     private const MOON_MIN_DIAMETER_RATIO = 0.48;
+    private const SECONDS_SINCE_EPOCH = 947182440;
+    private const SYNODIC_MONTH_DAYS = 29.530588853;
     
     private var digitSpacing as Number = 0;
     private var lineSpacing as Number = 0;
@@ -29,6 +31,28 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var dateVerticalOffset as Number = 0;
     private var dateDigitSpacing as Number = 0;
     private var layoutScale as Number = 1;
+    private var digitBitmaps as Array<WatchUi.BitmapResource>;
+    private var digitWidths as Array<Number>;
+    private var digitHeights as Array<Number>;
+    private var digitLookup as Dictionary;
+    private var weekdayBitmaps as Array<WatchUi.BitmapResource>;
+    private var dateDigitBitmaps as Array<WatchUi.BitmapResource>;
+    private var dateDigitWidths as Array<Number>;
+    private var dateDigitHeights as Array<Number>;
+    private var monthBitmaps as Array<WatchUi.BitmapResource>;
+    private var cachedHourValue as Number;
+    private var cachedMinuteValue as Number;
+    private var cachedHoursString as String;
+    private var cachedMinutesString as String;
+    private var cachedHoursWidth as Number;
+    private var cachedMinutesWidth as Number;
+    private var cachedDayValue as Number;
+    private var cachedDayString as String;
+    private var cachedDayWidth as Number;
+    private var cachedDayHeight as Number;
+    private var cachedWeekdayIndex as Number;
+    private var cachedMonthIndex as Number;
+    private var cachedMoonPhaseFrac as Number;
 
     private function roundScaled(n) as Number {
         return (Math.floor(n + 0.5)) as Number;
@@ -68,33 +92,6 @@ class WatchFaceView extends WatchUi.WatchFace {
         Rez.Drawables.DateDigit8,
         Rez.Drawables.DateDigit9
     ];
-   
-    private var digitBitmaps as Array<WatchUi.BitmapResource>;
-    private var digitWidths as Array<Number>;
-    private var digitHeights as Array<Number>;
-    private var digitLookup as Dictionary;
-    private var weekdayBitmaps as Array<WatchUi.BitmapResource>;
-    private var dateDigitBitmaps as Array<WatchUi.BitmapResource>;
-    private var dateDigitWidths as Array<Number>;
-    private var dateDigitHeights as Array<Number>;
-    private var monthBitmaps as Array<WatchUi.BitmapResource>;
-    private var cachedHourValue as Number;
-    private var cachedMinuteValue as Number;
-    private var cachedHoursString as String;
-    private var cachedMinutesString as String;
-    private var cachedHoursWidth as Number;
-    private var cachedMinutesWidth as Number;
-    private var cachedDayValue as Number;
-    private var cachedDayString as String;
-    private var cachedDayWidth as Number;
-    private var cachedDayHeight as Number;
-    private var cachedWeekdayIndex as Number;
-    private var cachedMonthIndex as Number;
-    private var cachedMoonPhaseFrac as Number;
-    private var inSleep as Boolean = false;
-
-    private const NEW_MOON_EPOCH = 947182440; // seconds since Unix epoch
-    private const SYNODIC_MONTH_DAYS = 29.530588853; // mean synodic month length
 
     function initialize() {
         WatchFace.initialize();
@@ -273,7 +270,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         var totalHeight = digitHeight + digitHeight + lineSpacing + minutesVerticalOffset;
         var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
 
-        if (cachedMoonPhaseFrac >= 0 && !inSleep) {
+        if (cachedMoonPhaseFrac >= 0) {
             var baseDiameter = MOON_BASE_DIAMETER * layoutScale;
             var margin = roundScaled(baseDiameter * MOON_MARGIN_RATIO);
             if (margin < 3) { margin = 3; }
@@ -345,12 +342,10 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function onExitSleep() as Void {
-        inSleep = false;
         invalidateAllCaches();
     }
 
     function onEnterSleep() as Void {
-        inSleep = true;
     }
 
     function invalidateAllCaches() as Void {
@@ -460,7 +455,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     function computeMoonPhaseFraction() as Number {
         var nowMoment = Time.now();
         var nowSecs = (nowMoment != null) ? nowMoment.value() : 0.0;
-        var daysSince = (nowSecs - NEW_MOON_EPOCH) / 86400.0;
+        var daysSince = (nowSecs - SECONDS_SINCE_EPOCH) / 86400.0;
         var cycles = daysSince / SYNODIC_MONTH_DAYS;
         var frac = cycles - Math.floor(cycles);
         if (frac < 0) { frac += 1; }
