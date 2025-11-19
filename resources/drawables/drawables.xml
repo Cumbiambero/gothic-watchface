@@ -39,4 +39,56 @@
     <bitmap id="Month10" filename="date/month_10.png" />
     <bitmap id="Month11" filename="date/month_11.png" />
     <bitmap id="Month12" filename="date/month_12.png" />
+    <bitmap id="MayaNumber1" filename="maya/number_1.png" />
+    <bitmap id="MayaNumber2" filename="maya/number_2.png" />
+    <bitmap id="MayaNumber3" filename="maya/number_3.png" />
+    <bitmap id="MayaNumber4" filename="maya/number_4.png" />
+    <bitmap id="MayaNumber5" filename="maya/number_5.png" />
+    <bitmap id="MayaNumber6" filename="maya/number_6.png" />
+    <bitmap id="MayaNumber7" filename="maya/number_7.png" />
+    <bitmap id="MayaNumber8" filename="maya/number_8.png" />
+    <bitmap id="MayaNumber9" filename="maya/number_9.png" />
+    <bitmap id="MayaNumber10" filename="maya/number_10.png" />
+    <bitmap id="MayaNumber11" filename="maya/number_11.png" />
+    <bitmap id="MayaNumber12" filename="maya/number_12.png" />
+    <bitmap id="MayaNumber13" filename="maya/number_13.png" />
+    <bitmap id="MayaDay1" filename="maya/day_1.png" />
+    <bitmap id="MayaDay2" filename="maya/day_2.png" />
+    <bitmap id="MayaDay3" filename="maya/day_3.png" />
+    <bitmap id="MayaDay4" filename="maya/day_4.png" />
+    <bitmap id="MayaDay5" filename="maya/day_5.png" />
+    <bitmap id="MayaDay6" filename="maya/day_6.png" />
+    <bitmap id="MayaDay7" filename="maya/day_7.png" />
+    <bitmap id="MayaDay8" filename="maya/day_8.png" />
+    <bitmap id="MayaDay9" filename="maya/day_9.png" />
+    <bitmap id="MayaDay10" filename="maya/day_10.png" />
+    <bitmap id="MayaDay11" filename="maya/day_11.png" />
+    <bitmap id="MayaDay12" filename="maya/day_12.png" />
+    <bitmap id="MayaDay13" filename="maya/day_13.png" />
+    <bitmap id="MayaDay14" filename="maya/day_14.png" />
+    <bitmap id="MayaDay15" filename="maya/day_15.png" />
+    <bitmap id="MayaDay16" filename="maya/day_16.png" />
+    <bitmap id="MayaDay17" filename="maya/day_17.png" />
+    <bitmap id="MayaDay18" filename="maya/day_18.png" />
+    <bitmap id="MayaDay19" filename="maya/day_19.png" />
+    <bitmap id="MayaDay20" filename="maya/day_20.png" />
+    <bitmap id="MayaMonth1" filename="maya/month_1.png" />
+    <bitmap id="MayaMonth2" filename="maya/month_2.png" />
+    <bitmap id="MayaMonth3" filename="maya/month_3.png" />
+    <bitmap id="MayaMonth4" filename="maya/month_4.png" />
+    <bitmap id="MayaMonth5" filename="maya/month_5.png" />
+    <bitmap id="MayaMonth6" filename="maya/month_6.png" />
+    <bitmap id="MayaMonth7" filename="maya/month_7.png" />
+    <bitmap id="MayaMonth8" filename="maya/month_8.png" />
+    <bitmap id="MayaMonth9" filename="maya/month_9.png" />
+    <bitmap id="MayaMonth10" filename="maya/month_10.png" />
+    <bitmap id="MayaMonth11" filename="maya/month_11.png" />
+    <bitmap id="MayaMonth12" filename="maya/month_12.png" />
+    <bitmap id="MayaMonth13" filename="maya/month_13.png" />
+    <bitmap id="MayaMonth14" filename="maya/month_14.png" />
+    <bitmap id="MayaMonth15" filename="maya/month_15.png" />
+    <bitmap id="MayaMonth16" filename="maya/month_16.png" />
+    <bitmap id="MayaMonth17" filename="maya/month_17.png" />
+    <bitmap id="MayaMonth18" filename="maya/month_18.png" />
+    <bitmap id="MayaMonth19" filename="maya/month_19.png" />
 </drawables>

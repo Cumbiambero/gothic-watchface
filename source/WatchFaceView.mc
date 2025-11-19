@@ -19,8 +19,6 @@ class WatchFaceView extends WatchUi.WatchFace {
     private const MOON_MARGIN_RATIO = 0.08;
     private const MOON_VERTICAL_BIAS_RATIO = 0.14;
     private const MOON_MIN_DIAMETER_RATIO = 0.48;
-    private const SECONDS_SINCE_EPOCH = 947182440;
-    private const SYNODIC_MONTH_DAYS = 29.530588853;
     
     private var digitSpacing as Number = 0;
     private var lineSpacing as Number = 0;
@@ -53,6 +51,11 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var cachedWeekdayIndex as Number;
     private var cachedMonthIndex as Number;
     private var cachedMoonPhaseFrac as Number;
+    private var cachedTzolkin as Dictionary = {} as Dictionary;
+    private var cachedHaab as Dictionary = {} as Dictionary;
+    private var mayaNumberBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
+    private var mayaDayBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
+    private var mayaMonthBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
 
     private function roundScaled(n) as Number {
         return (Math.floor(n + 0.5)) as Number;
@@ -191,6 +194,61 @@ class WatchFaceView extends WatchUi.WatchFace {
         for (var i = 0; i < MONTH_RESOURCE_IDS.size(); ++i) {
             monthBitmaps.add(WatchUi.loadResource(MONTH_RESOURCE_IDS[i]) as WatchUi.BitmapResource);
         }
+
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber1) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber2) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber3) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber4) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber5) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber6) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber7) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber8) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber9) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber10) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber11) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber12) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber13) as WatchUi.BitmapResource);
+
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay1) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay2) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay3) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay4) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay5) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay6) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay7) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay8) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay9) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay10) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay11) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay12) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay13) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay14) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay15) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay16) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay17) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay18) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay19) as WatchUi.BitmapResource);
+        mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay20) as WatchUi.BitmapResource);
+
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth1) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth2) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth3) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth4) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth5) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth6) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth7) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth8) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth9) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth10) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth11) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth12) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth13) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth14) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth15) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth16) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth17) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth18) as WatchUi.BitmapResource);
+        mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth19) as WatchUi.BitmapResource);
     }
 
     function onShow() as Void {
@@ -261,7 +319,15 @@ class WatchFaceView extends WatchUi.WatchFace {
         var hasDateBitmaps = weekdayBitmaps.size() > 0 && dateDigitBitmaps.size() == DATE_DIGIT_RESOURCE_IDS.size() && monthBitmaps.size() > 0 && cachedDayString != "" && cachedWeekdayIndex >= 0 && cachedMonthIndex >= 0;
 
         if (dayChanged || cachedMoonPhaseFrac < 0) {
-            cachedMoonPhaseFrac = computeMoonPhaseFraction();
+            cachedMoonPhaseFrac = MoonPhase.computeMoonPhaseFraction();
+        }
+
+        if (dayChanged || cachedTzolkin.size() == 0) {
+            cachedTzolkin = MayaCalendar.computeCurrentTzolkin();
+        }
+
+        if (dayChanged || cachedHaab.size() == 0) {
+            cachedHaab = MayaCalendar.computeCurrentHaab();
         }
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -279,7 +345,22 @@ class WatchFaceView extends WatchUi.WatchFace {
             var diameter = roundScaled(baseDiameter);
             var minDiameter = roundScaled(MOON_BASE_DIAMETER * MOON_MIN_DIAMETER_RATIO);
             if (diameter < minDiameter) { diameter = minDiameter; }
-            drawProceduralMoon(dc, margin + roundScaled(diameter / 2.0), roundScaled(height / 2.0) - verticalBias, diameter, cachedMoonPhaseFrac);
+            MoonPhase.drawProceduralMoon(dc, margin + roundScaled(diameter / 2.0), roundScaled(height / 2.0) - verticalBias, diameter, cachedMoonPhaseFrac);
+        }
+
+        if (cachedTzolkin.size() > 0) {
+            var baseDiameter = MOON_BASE_DIAMETER * layoutScale;
+            var margin = roundScaled(baseDiameter * MOON_MARGIN_RATIO);
+            if (margin < 3) { margin = 3; }
+            if (margin > 8) { margin = 8; }
+            var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(baseDiameter * MOON_VERTICAL_BIAS_RATIO) : 0;
+            var diameter = roundScaled(baseDiameter);
+            var minDiameter = roundScaled(MOON_BASE_DIAMETER * MOON_MIN_DIAMETER_RATIO);
+            if (diameter < minDiameter) { diameter = minDiameter; }
+            var mayaX = margin + roundScaled(diameter / 2.0) - roundScaled(15 * layoutScale);
+            var tzolkinY = roundScaled(height / 2.0) - verticalBias - roundScaled(diameter / 2.0) - roundScaled(30 * layoutScale);
+            var haabY = roundScaled(height / 2.0) - verticalBias + roundScaled(diameter / 2.0) + roundScaled(10 * layoutScale);
+            drawMaya(dc, mayaX, tzolkinY, haabY);
         }
 
         drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, digitHeight);
@@ -357,7 +438,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         cachedDayString = "";
         cachedWeekdayIndex = -1;
         cachedMonthIndex = -1;
-    cachedMoonPhaseFrac = -1;
+        cachedMoonPhaseFrac = -1;
     }
 
     function getLineMetrics(text as String) as Dictionary {
@@ -452,56 +533,16 @@ class WatchFaceView extends WatchUi.WatchFace {
         }
     }
 
-    function computeMoonPhaseFraction() as Number {
-        var nowMoment = Time.now();
-        var nowSecs = (nowMoment != null) ? nowMoment.value() : 0.0;
-        var daysSince = (nowSecs - SECONDS_SINCE_EPOCH) / 86400.0;
-        var cycles = daysSince / SYNODIC_MONTH_DAYS;
-        var frac = cycles - Math.floor(cycles);
-        if (frac < 0) { frac += 1; }
-        return frac as Number;
-    }
+    function drawMaya(dc as Dc, x as Number, tzolkinY as Number, haabY as Number) as Void {
+        var numberBmp = mayaNumberBitmaps[cachedTzolkin["number"] - 1];
+        var nameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
+        dc.drawBitmap(x, tzolkinY, numberBmp);
+        dc.drawBitmap(x + numberBmp.getWidth() + 5, tzolkinY, nameBmp);
 
-    function drawProceduralMoon(dc as Dc, centerX as Number, centerY as Number, diameter as Number, phaseFrac as Number) as Void {
-        if (phaseFrac < 0) { return; }
-        if (phaseFrac >= 1) { phaseFrac -= Math.floor(phaseFrac); }
-
-        var radius = (diameter / 2.0) as Number;
-        var waxing = (phaseFrac < 0.5);
-        var progress = waxing ? (phaseFrac / 0.5) : ((1 - phaseFrac) / 0.5);
-        if (progress <= 0.02) { 
-            return;
-        }
-
-        var r2 = radius * radius;
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-
-        for (var dx = -radius; dx <= radius; dx += 1) {
-            var x = centerX + dx;
-            var inner = r2 - (dx * dx);
-            if (inner < 0) { continue; }
-            var halfHeight = Math.sqrt(inner);
-            var topY = centerY - halfHeight;
-            var bottomY = centerY + halfHeight;
-
-            var yStart;
-            var yEnd;
-            if (waxing) {
-                var visibleHeight = (2 * halfHeight * progress);
-                yEnd = bottomY;
-                yStart = bottomY - visibleHeight;
-                if (yStart < topY) { yStart = topY; }
-            } else {
-                var progress2 = (phaseFrac - 0.5) / 0.5;
-                var visibleHeight2 = (2 * halfHeight * (1 - progress2));
-                yStart = topY;
-                yEnd = topY + visibleHeight2;
-                if (yEnd > bottomY) { yEnd = bottomY; }
-            }
-
-            if (yEnd > yStart) {
-                dc.drawLine(x, yStart, x, yEnd);
-            }
-        }
+        // Draw Haab' below
+        var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"] - 1];
+        var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
+        dc.drawBitmap(x, haabY, haabNumberBmp);
+        dc.drawBitmap(x + haabNumberBmp.getWidth() + 5, haabY, haabMonthBmp);
     }
 }
