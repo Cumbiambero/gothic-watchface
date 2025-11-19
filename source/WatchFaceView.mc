@@ -195,6 +195,7 @@ class WatchFaceView extends WatchUi.WatchFace {
             monthBitmaps.add(WatchUi.loadResource(MONTH_RESOURCE_IDS[i]) as WatchUi.BitmapResource);
         }
 
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber0) as WatchUi.BitmapResource);
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber1) as WatchUi.BitmapResource);
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber2) as WatchUi.BitmapResource);
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber3) as WatchUi.BitmapResource);
@@ -208,6 +209,12 @@ class WatchFaceView extends WatchUi.WatchFace {
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber11) as WatchUi.BitmapResource);
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber12) as WatchUi.BitmapResource);
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber13) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber14) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber15) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber16) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber17) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber18) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber19) as WatchUi.BitmapResource);
 
         mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay1) as WatchUi.BitmapResource);
         mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay2) as WatchUi.BitmapResource);
@@ -537,12 +544,11 @@ class WatchFaceView extends WatchUi.WatchFace {
         var numberBmp = mayaNumberBitmaps[cachedTzolkin["number"] - 1];
         var nameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
         dc.drawBitmap(x, tzolkinY, numberBmp);
-        dc.drawBitmap(x + numberBmp.getWidth() + 5, tzolkinY, nameBmp);
+        dc.drawBitmap(x + numberBmp.getWidth(), tzolkinY, nameBmp);
 
-        // Draw Haab' below
         var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"] - 1];
         var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
         dc.drawBitmap(x, haabY, haabNumberBmp);
-        dc.drawBitmap(x + haabNumberBmp.getWidth() + 5, haabY, haabMonthBmp);
+        dc.drawBitmap(x + haabNumberBmp.getWidth(), haabY, haabMonthBmp);
     }
 }

@@ -39,6 +39,7 @@
     <bitmap id="Month10" filename="date/month_10.png" />
     <bitmap id="Month11" filename="date/month_11.png" />
     <bitmap id="Month12" filename="date/month_12.png" />
+    <bitmap id="MayaNumber0" filename="maya/number_0.png" />
     <bitmap id="MayaNumber1" filename="maya/number_1.png" />
     <bitmap id="MayaNumber2" filename="maya/number_2.png" />
     <bitmap id="MayaNumber3" filename="maya/number_3.png" />
@@ -52,6 +53,12 @@
     <bitmap id="MayaNumber11" filename="maya/number_11.png" />
     <bitmap id="MayaNumber12" filename="maya/number_12.png" />
     <bitmap id="MayaNumber13" filename="maya/number_13.png" />
+    <bitmap id="MayaNumber14" filename="maya/number_14.png" />
+    <bitmap id="MayaNumber15" filename="maya/number_15.png" />
+    <bitmap id="MayaNumber16" filename="maya/number_16.png" />
+    <bitmap id="MayaNumber17" filename="maya/number_17.png" />
+    <bitmap id="MayaNumber18" filename="maya/number_18.png" />
+    <bitmap id="MayaNumber19" filename="maya/number_19.png" />
     <bitmap id="MayaDay1" filename="maya/day_1.png" />
     <bitmap id="MayaDay2" filename="maya/day_2.png" />
     <bitmap id="MayaDay3" filename="maya/day_3.png" />

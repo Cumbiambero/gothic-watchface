@@ -31,7 +31,7 @@ class MayaCalendar {
         var monthIndex = haabDay / 20;
         var dayInMonth = (haabDay % 20) + 1;
         if (monthIndex == 18) {
-            dayInMonth = haabDay - 360;
+            dayInMonth = haabDay - 360 + 1;
         }
         return {
             "monthIndex" => monthIndex,
