@@ -20,8 +20,12 @@ class MoonPhase {
     }
 
     static function drawMoon(dc as Dc, centerX as Number, centerY as Number, diameter as Number, phaseFrac as Number) as Void {
-        if (phaseFrac < 0) { return; }
-        if (phaseFrac >= 1) { phaseFrac -= Math.floor(phaseFrac); }
+        if (phaseFrac < 0) {
+            return;
+            }
+        if (phaseFrac >= 1) {
+            phaseFrac -= Math.floor(phaseFrac);
+        }
 
         var radius = (diameter / 2.0) as Number;
         var waxing = (phaseFrac < 0.5);
@@ -36,7 +40,7 @@ class MoonPhase {
         for (var dx = -radius; dx <= radius; dx += 1) {
             var x = centerX + dx;
             var inner = r2 - (dx * dx);
-            
+
             if (inner < 0) {
                 continue;
             }
