@@ -98,4 +98,16 @@
     <bitmap id="MayaMonth17" filename="maya/month_17.png" />
     <bitmap id="MayaMonth18" filename="maya/month_18.png" />
     <bitmap id="MayaMonth19" filename="maya/month_19.png" />
+    <bitmap id="Zodiac0" filename="zodiac/zodiac_0.png" />
+    <bitmap id="Zodiac1" filename="zodiac/zodiac_1.png" />
+    <bitmap id="Zodiac2" filename="zodiac/zodiac_2.png" />
+    <bitmap id="Zodiac3" filename="zodiac/zodiac_3.png" />
+    <bitmap id="Zodiac4" filename="zodiac/zodiac_4.png" />
+    <bitmap id="Zodiac5" filename="zodiac/zodiac_5.png" />
+    <bitmap id="Zodiac6" filename="zodiac/zodiac_6.png" />
+    <bitmap id="Zodiac7" filename="zodiac/zodiac_7.png" />
+    <bitmap id="Zodiac8" filename="zodiac/zodiac_8.png" />
+    <bitmap id="Zodiac9" filename="zodiac/zodiac_9.png" />
+    <bitmap id="Zodiac10" filename="zodiac/zodiac_10.png" />
+    <bitmap id="Zodiac11" filename="zodiac/zodiac_11.png" />
 </drawables>

@@ -16,8 +16,6 @@ class WatchFaceView extends WatchUi.WatchFace {
     private const DATE_VERTICAL_OFFSET = 12;
     private const DATE_DIGIT_SPACING = -10;
     private const MOON_BASE_DIAMETER = 50.0;
-    private const MOON_MARGIN_RATIO = 0.08;
-    private const MOON_VERTICAL_BIAS_RATIO = 0.14;
     private const MOON_MIN_DIAMETER_RATIO = 0.48;
     
     private var digitSpacing as Number = 0;
@@ -53,9 +51,11 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var cachedMoonPhaseFrac as Number;
     private var cachedTzolkin as Dictionary = {} as Dictionary;
     private var cachedHaab as Dictionary = {} as Dictionary;
+    private var cachedZodiac as Dictionary = {} as Dictionary;
     private var mayaNumberBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
     private var mayaDayBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
     private var mayaMonthBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
+    private var zodiacBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
 
     private function roundScaled(n) as Number {
         return (Math.floor(n + 0.5)) as Number;
@@ -256,12 +256,26 @@ class WatchFaceView extends WatchUi.WatchFace {
         mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth17) as WatchUi.BitmapResource);
         mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth18) as WatchUi.BitmapResource);
         mayaMonthBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaMonth19) as WatchUi.BitmapResource);
+
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac0) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac1) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac2) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac3) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac4) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac5) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac6) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac7) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac8) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac9) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac10) as WatchUi.BitmapResource);
+        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac11) as WatchUi.BitmapResource);
     }
 
     function onShow() as Void {
     }
 
     function onUpdate(dc as Dc) as Void {
+        var width = dc.getWidth();
         var height = dc.getHeight();
 
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
@@ -337,37 +351,42 @@ class WatchFaceView extends WatchUi.WatchFace {
             cachedHaab = MayaCalendar.computeCurrentHaab();
         }
 
+        if (dayChanged || cachedZodiac.size() == 0) {
+            cachedZodiac = Zodiac.getCurrentZodiac();
+        }
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
         var digitHeight = digitHeights[0];
         var totalHeight = digitHeight + digitHeight + lineSpacing + minutesVerticalOffset;
         var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
 
+        var hoursStartX = roundScaled((width - cachedHoursWidth) / 2);
+        var lineRight = hoursStartX - roundScaled(12 * layoutScale);
+
         if (cachedMoonPhaseFrac >= 0) {
             var baseDiameter = MOON_BASE_DIAMETER * layoutScale;
-            var margin = roundScaled(baseDiameter * MOON_MARGIN_RATIO);
-            if (margin < 3) { margin = 3; }
-            if (margin > 8) { margin = 8; }
-            var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(baseDiameter * MOON_VERTICAL_BIAS_RATIO) : 0;
             var diameter = roundScaled(baseDiameter);
             var minDiameter = roundScaled(MOON_BASE_DIAMETER * MOON_MIN_DIAMETER_RATIO);
             if (diameter < minDiameter) { diameter = minDiameter; }
-            MoonPhase.drawProceduralMoon(dc, margin + roundScaled(diameter / 2.0), roundScaled(height / 2.0) - verticalBias, diameter, cachedMoonPhaseFrac);
+            var moonCenterX = lineRight - roundScaled(diameter / 2.0);
+            MoonPhase.drawMoon(dc, moonCenterX, roundScaled(height / 2.0) + dateVerticalOffset - roundScaled(60 * layoutScale), diameter, cachedMoonPhaseFrac);
         }
 
         if (cachedTzolkin.size() > 0) {
             var baseDiameter = MOON_BASE_DIAMETER * layoutScale;
-            var margin = roundScaled(baseDiameter * MOON_MARGIN_RATIO);
-            if (margin < 3) { margin = 3; }
-            if (margin > 8) { margin = 8; }
-            var verticalBias = (dc.getWidth() != dc.getHeight()) ? roundScaled(baseDiameter * MOON_VERTICAL_BIAS_RATIO) : 0;
             var diameter = roundScaled(baseDiameter);
             var minDiameter = roundScaled(MOON_BASE_DIAMETER * MOON_MIN_DIAMETER_RATIO);
             if (diameter < minDiameter) { diameter = minDiameter; }
-            var mayaX = margin + roundScaled(diameter / 2.0) - roundScaled(15 * layoutScale);
-            var tzolkinY = roundScaled(height / 2.0) - verticalBias - roundScaled(diameter / 2.0) - roundScaled(30 * layoutScale);
-            var haabY = roundScaled(height / 2.0) - verticalBias + roundScaled(diameter / 2.0) + roundScaled(10 * layoutScale);
-            drawMaya(dc, mayaX, tzolkinY, haabY);
+            var tzolkinY = roundScaled(height / 2.0) + dateVerticalOffset - roundScaled(30 * layoutScale);
+            var haabY = roundScaled(height / 2.0) + dateVerticalOffset;
+            drawMaya(dc, lineRight, tzolkinY, haabY);
+
+            if (cachedZodiac.size() > 0) {
+                var zodiacBitmap = zodiacBitmaps[cachedZodiac["index"]];
+                var zX = lineRight - zodiacBitmap.getWidth() - roundScaled(10 * layoutScale);
+                dc.drawBitmap(zX, roundScaled(height / 2.0) + dateVerticalOffset + roundScaled(30 * layoutScale), zodiacBitmap);
+            }
         }
 
         drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, digitHeight);
@@ -540,15 +559,19 @@ class WatchFaceView extends WatchUi.WatchFace {
         }
     }
 
-    function drawMaya(dc as Dc, x as Number, tzolkinY as Number, haabY as Number) as Void {
+    function drawMaya(dc as Dc, rightX as Number, tzolkinY as Number, haabY as Number) as Void {
         var numberBmp = mayaNumberBitmaps[cachedTzolkin["number"] - 1];
         var nameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
-        dc.drawBitmap(x, tzolkinY, numberBmp);
-        dc.drawBitmap(x + numberBmp.getWidth(), tzolkinY, nameBmp);
+        var tzolkinTotalW = numberBmp.getWidth() + nameBmp.getWidth();
+        var tzolkinLeft = rightX - tzolkinTotalW;
+        dc.drawBitmap(tzolkinLeft, tzolkinY, numberBmp);
+        dc.drawBitmap(tzolkinLeft + numberBmp.getWidth(), tzolkinY, nameBmp);
 
         var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"] - 1];
         var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
-        dc.drawBitmap(x, haabY, haabNumberBmp);
-        dc.drawBitmap(x + haabNumberBmp.getWidth(), haabY, haabMonthBmp);
+        var haabTotalW = haabNumberBmp.getWidth() + haabMonthBmp.getWidth();
+        var haabLeft = rightX - haabTotalW;
+        dc.drawBitmap(haabLeft, haabY, haabNumberBmp);
+        dc.drawBitmap(haabLeft + haabNumberBmp.getWidth(), haabY, haabMonthBmp);
     }
 }
