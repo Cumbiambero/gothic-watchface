@@ -287,12 +287,12 @@ class WatchFaceView extends WatchUi.WatchFace {
         }
 
         if (cachedTzolkin.size() > 0) {
-            var tzNumberBmp = mayaNumberBitmaps[cachedTzolkin["number"] - 1];
+            var tzNumberBmp = mayaNumberBitmaps[cachedTzolkin["number"]];
             var tzNameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
             var tzTotalW = tzNumberBmp.getWidth() + tzNameBmp.getWidth();
             if (tzTotalW > colMaxW) { colMaxW = tzTotalW; }
 
-            var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"] - 1];
+            var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"]];
             var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
             var haabTotalW = haabNumberBmp.getWidth() + haabMonthBmp.getWidth();
             if (haabTotalW > colMaxW) { colMaxW = haabTotalW; }
@@ -492,14 +492,14 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function drawMaya(dc as Dc, centerX as Number, tzolkinY as Number, haabY as Number) as Void {
-        var numberBmp = mayaNumberBitmaps[cachedTzolkin["number"] - 1];
+        var numberBmp = mayaNumberBitmaps[cachedTzolkin["number"]];
         var nameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
             var tzolkinTotalW = numberBmp.getWidth() + nameBmp.getWidth();
             var tzolkinLeft = centerX - roundScaled(tzolkinTotalW / 2.0);
             dc.drawBitmap(tzolkinLeft, tzolkinY, numberBmp);
             dc.drawBitmap(tzolkinLeft + numberBmp.getWidth(), tzolkinY, nameBmp);
 
-        var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"] - 1];
+        var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"]];
         var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
         var haabTotalW = haabNumberBmp.getWidth() + haabMonthBmp.getWidth();
         var haabLeft = centerX - roundScaled(haabTotalW / 2.0);
