@@ -5,7 +5,9 @@
 A minimalist, gothic style Garmin Connect IQ watch face showing:
 - Hours & minutes
 - Weekday (as astronomical symbol), day of month, numeric month (roman)
-- Moon phase (approximation)
+- Moon phase
+- Maya calendar
+- Zodiac
 
 ## Changelog
 
@@ -15,6 +17,10 @@ A minimalist, gothic style Garmin Connect IQ watch face showing:
 ### 1.1.0
 - Show more accurate moon phase (no longer an image)
 - Fix bouncing hour
+
+### 1.2.0
+- Add Maya calendar (Tzolk'in and Haab)
+- Add Zodiac
 
 ## Supported Devices
 Fenix 7 series and more
