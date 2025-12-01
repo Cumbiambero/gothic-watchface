@@ -190,176 +190,74 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function onUpdate(dc as Dc) as Void {
-        var width = dc.getWidth();
+        clearScreen(dc);
+
         var height = dc.getHeight();
 
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-
-        var clockTime = System.getClockTime();
-
-        var hourChanged = (clockTime.hour != cachedHourValue);
-        if (hourChanged) {
-            cachedHourValue = clockTime.hour;
-            var displayHour = cachedHourValue;
-            var settings = System.getDeviceSettings();
-            if (settings != null && !settings.is24Hour) {
-                displayHour = displayHour % 12;
-                if (displayHour == 0) {
-                    displayHour = 12;
-                }
-            }
-            cachedHoursString = displayHour.format("%02d");
-            var hoursMetrics = getLineMetrics(cachedHoursString);
-            cachedHoursWidth = hoursMetrics["width"];
-        }
-
-        var minuteChanged = (clockTime.min != cachedMinuteValue);
-        if (minuteChanged) {
-            cachedMinuteValue = clockTime.min;
-            cachedMinutesString = cachedMinuteValue.format("%02d");
-            var minutesMetrics = getLineMetrics(cachedMinutesString);
-            cachedMinutesWidth = minutesMetrics["width"];
-        }
-
-        var needsDateUpdate = hourChanged || cachedDayValue == -1 || cachedWeekdayIndex == -1 || cachedMonthIndex == -1;
-        var dayChanged = false;
-        if (needsDateUpdate) {
-            var infoShort = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT) as Time.Gregorian.Info;
-
-            var weekdayIndex = getNumberValue(infoShort.day_of_week, 1) - 1;
-            if (weekdayIndex < 0 || weekdayIndex >= weekdayBitmaps.size()) {
-                weekdayIndex = 0;
-            }
-            cachedWeekdayIndex = weekdayIndex;
-
-            var monthIndex = getNumberValue(infoShort.month, 1) - 1;
-            if (monthIndex < 0 || monthIndex >= monthBitmaps.size()) {
-                monthIndex = 0;
-            }
-            cachedMonthIndex = monthIndex;
-
-            var dayNumber = getNumberValue(infoShort.day, 1);
-            if (dayNumber < 1) { dayNumber = 1; } else if (dayNumber > 31) { dayNumber = 31; }
-
-            if (dayNumber != cachedDayValue) {
-                dayChanged = true;
-                cachedDayValue = dayNumber;
-                cachedDayString = dayNumber.format("%d");
-                var dayMetrics = getDateDigitLineMetrics(cachedDayString);
-                cachedDayWidth = dayMetrics["width"];
-                cachedDayHeight = dayMetrics["height"];
-            }
-        }
-
-        if (dayChanged || cachedMoonPhaseFrac < 0) {
-            cachedMoonPhaseFrac = MoonPhase.computeMoonPhaseFraction();
-        }
-
-        if (dayChanged || cachedTzolkin.size() == 0) {
-            cachedTzolkin = MayaCalendar.computeCurrentTzolkin();
-        }
-
-        if (dayChanged || cachedHaab.size() == 0) {
-            cachedHaab = MayaCalendar.computeCurrentHaab();
-        }
-
-        if (dayChanged || cachedZodiac.size() == 0) {
-            cachedZodiac = Zodiac.getCurrentZodiac();
-        }
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        var hourChanged = updateTimeCache(System.getClockTime());
+        var dayChanged = updateDateCache(hourChanged);
+        updateAstronomicalData(dayChanged);
 
         var digitHeight = digitHeights[0];
         var totalHeight = digitHeight + digitHeight + lineSpacing + minutesVerticalOffset;
         var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
-        var hoursStartX = roundScaled((width - stableHoursWidth) / 2);
+        var hoursStartX = roundScaled((dc.getWidth() - stableHoursWidth) / 2);
         var lineRight = hoursStartX - roundScaled(LEFT_COLUMN_GAP * layoutScale);
 
-        var colMaxW = 0;
+        var columnMaxWidth = 0;
         var moonDiameter = 0;
         if (cachedMoonPhaseFrac >= 0) {
             var baseDiameter = MOON_BASE_DIAMETER * layoutScale;
             moonDiameter = roundScaled(baseDiameter);
             var minDiameter = roundScaled(MOON_BASE_DIAMETER * MOON_MIN_DIAMETER_RATIO);
             if (moonDiameter < minDiameter) { moonDiameter = minDiameter; }
-            if (moonDiameter > colMaxW) { colMaxW = moonDiameter; }
+            if (moonDiameter > columnMaxWidth) { columnMaxWidth = moonDiameter; }
         }
 
         if (cachedTzolkin.size() > 0) {
             var tzNumberBmp = mayaNumberBitmaps[cachedTzolkin["number"]];
             var tzNameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
             var tzTotalW = tzNumberBmp.getWidth() + tzNameBmp.getWidth();
-            if (tzTotalW > colMaxW) { colMaxW = tzTotalW; }
+            if (tzTotalW > columnMaxWidth) { columnMaxWidth = tzTotalW; }
 
             var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"]];
             var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
             var haabTotalW = haabNumberBmp.getWidth() + haabMonthBmp.getWidth();
-            if (haabTotalW > colMaxW) { colMaxW = haabTotalW; }
+            if (haabTotalW > columnMaxWidth) { columnMaxWidth = haabTotalW; }
         }
 
         if (cachedZodiac.size() > 0) {
             var zodiacBitmap = zodiacBitmaps[cachedZodiac["index"]];
-            if (zodiacBitmap.getWidth() > colMaxW) { colMaxW = zodiacBitmap.getWidth(); }
+            if (zodiacBitmap.getWidth() > columnMaxWidth) { columnMaxWidth = zodiacBitmap.getWidth(); }
         }
 
-        var columnLeft = lineRight - colMaxW;
-        var anchorCenterX = columnLeft + roundScaled(colMaxW / 2.0);
+        var columnLeftPosition = lineRight - columnMaxWidth;
+        var anchorCenterX = columnLeftPosition + roundScaled(columnMaxWidth / 2.0);
+        var centerY = roundScaled(height / 2.0) + dateVerticalOffset;
 
         if (cachedMoonPhaseFrac >= 0) {
-            MoonPhase.drawMoon(dc, anchorCenterX, roundScaled(height / 2.0) + dateVerticalOffset - roundScaled(MOON_TO_MAYA_GAP * layoutScale), moonDiameter, cachedMoonPhaseFrac);
+            MoonPhase.drawMoon(dc, anchorCenterX, centerY - roundScaled(MOON_TO_MAYA_GAP * layoutScale), moonDiameter, cachedMoonPhaseFrac);
         }
 
         if (cachedTzolkin.size() > 0) {
-            var tzolkinY = roundScaled(height / 2.0) + dateVerticalOffset - roundScaled(30 * layoutScale);
-            var haabY = roundScaled(height / 2.0) + dateVerticalOffset;
+            var tzolkinY = centerY - roundScaled(30 * layoutScale);
+            var haabY = centerY;
             drawMaya(dc, anchorCenterX, tzolkinY, haabY);
 
             if (cachedZodiac.size() > 0) {
                 var zodiacBitmap2 = zodiacBitmaps[cachedZodiac["index"]];
                 var zX = anchorCenterX - roundScaled(zodiacBitmap2.getWidth() / 2.0);
-                dc.drawBitmap(zX, roundScaled(height / 2.0) + dateVerticalOffset + roundScaled(30 * layoutScale), zodiacBitmap2);
+                dc.drawBitmap(zX, centerY + roundScaled(30 * layoutScale), zodiacBitmap2);
             }
         }
 
-        drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, digitHeight);
-        drawDigitLine(dc, cachedMinutesString, startY + digitHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth, digitHeight);
+        drawTimeElements(dc, startY, digitHeight);
+        drawDateElements(dc, height);
+    }
 
-
-        var weekdayBitmap = weekdayBitmaps[cachedWeekdayIndex];
-        var monthBitmap = monthBitmaps[cachedMonthIndex];
-        var monthWidth = monthBitmap.getWidth();
-
-        var dateRight = dc.getWidth() - dateMargin;
-
-        var symbolHeight = weekdayBitmap.getHeight();
-        var symbolWidth = weekdayBitmap.getWidth();
-        var dayHeight = cachedDayHeight;
-
-        var maxWidth = symbolWidth;
-        if (cachedDayWidth > maxWidth) {
-            maxWidth = cachedDayWidth;
-        }
-        if (monthWidth > maxWidth) {
-            maxWidth = monthWidth;
-        }
-
-        var dateLeft = dateRight - maxWidth;
-        var dateCenter = dateLeft + roundScaled(maxWidth / 2.0);
-
-        var symbolLeft = dateCenter - roundScaled(symbolWidth / 2.0);
-        var dayLeft = dateCenter - roundScaled(cachedDayWidth / 2.0);
-        var monthLeft = dateCenter - roundScaled(monthWidth / 2.0);
-
-        var dayCenterY = roundScaled(height / 2.0) + dateVerticalOffset;
-        var dayTop = dayCenterY - roundScaled(dayHeight / 2.0);
-
-        var symbolTop = dayTop - dateGap - symbolHeight;
-        var monthTop = dayTop + dayHeight + dateGap + roundScaled(3 * layoutScale);
-
-        dc.drawBitmap(symbolLeft as Number, symbolTop as Number, weekdayBitmap);
-        drawDateDigitLine(dc, cachedDayString, dayLeft as Number, dayTop as Number, cachedDayWidth, cachedDayHeight);
-        dc.drawBitmap(monthLeft as Number, monthTop as Number, monthBitmap);
+    function clearScreen(dc as Dc) as Void {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
     }
 
     function getNumberValue(value as Lang.Object?, fallback as Number) as Number {
@@ -414,7 +312,6 @@ class WatchFaceView extends WatchUi.WatchFace {
             if (i < length - 1) {
                 totalWidth += digitSpacing;
             }
-
             if (h > maxHeight) {
                 maxHeight = h;
             }
@@ -494,10 +391,10 @@ class WatchFaceView extends WatchUi.WatchFace {
     function drawMaya(dc as Dc, centerX as Number, tzolkinY as Number, haabY as Number) as Void {
         var numberBmp = mayaNumberBitmaps[cachedTzolkin["number"]];
         var nameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
-            var tzolkinTotalW = numberBmp.getWidth() + nameBmp.getWidth();
-            var tzolkinLeft = centerX - roundScaled(tzolkinTotalW / 2.0);
-            dc.drawBitmap(tzolkinLeft, tzolkinY, numberBmp);
-            dc.drawBitmap(tzolkinLeft + numberBmp.getWidth(), tzolkinY, nameBmp);
+        var tzolkinTotalW = numberBmp.getWidth() + nameBmp.getWidth();
+        var tzolkinLeft = centerX - roundScaled(tzolkinTotalW / 2.0);
+        dc.drawBitmap(tzolkinLeft, tzolkinY, numberBmp);
+        dc.drawBitmap(tzolkinLeft + numberBmp.getWidth(), tzolkinY, nameBmp);
 
         var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"]];
         var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
@@ -505,5 +402,123 @@ class WatchFaceView extends WatchUi.WatchFace {
         var haabLeft = centerX - roundScaled(haabTotalW / 2.0);
         dc.drawBitmap(haabLeft, haabY, haabNumberBmp);
         dc.drawBitmap(haabLeft + haabNumberBmp.getWidth(), haabY, haabMonthBmp);
+    }
+
+    private function updateTimeCache(clockTime as System.ClockTime) as Boolean {
+        var hourChanged = (clockTime.hour != cachedHourValue);
+        if (hourChanged) {
+            cachedHourValue = clockTime.hour;
+            var displayHour = cachedHourValue;
+            var settings = System.getDeviceSettings();
+            if (settings != null && !settings.is24Hour) {
+                displayHour = displayHour % 12;
+                if (displayHour == 0) {
+                    displayHour = 12;
+                }
+            }
+            cachedHoursString = displayHour.format("%02d");
+            var hoursMetrics = getLineMetrics(cachedHoursString);
+            cachedHoursWidth = hoursMetrics["width"];
+        }
+
+        var minuteChanged = (clockTime.min != cachedMinuteValue);
+        if (minuteChanged) {
+            cachedMinuteValue = clockTime.min;
+            cachedMinutesString = cachedMinuteValue.format("%02d");
+            var minutesMetrics = getLineMetrics(cachedMinutesString);
+            cachedMinutesWidth = minutesMetrics["width"];
+        }
+
+        return hourChanged;
+    }
+
+    private function updateDateCache(hourChanged as Boolean) as Boolean {
+        var needsDateUpdate = hourChanged || cachedDayValue == -1 || cachedWeekdayIndex == -1 || cachedMonthIndex == -1;
+        var dayChanged = false;
+        if (needsDateUpdate) {
+            var infoShort = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT) as Time.Gregorian.Info;
+
+            var weekdayIndex = getNumberValue(infoShort.day_of_week, 1) - 1;
+            if (weekdayIndex < 0 || weekdayIndex >= weekdayBitmaps.size()) {
+                weekdayIndex = 0;
+            }
+            cachedWeekdayIndex = weekdayIndex;
+
+            var monthIndex = getNumberValue(infoShort.month, 1) - 1;
+            if (monthIndex < 0 || monthIndex >= monthBitmaps.size()) {
+                monthIndex = 0;
+            }
+            cachedMonthIndex = monthIndex;
+
+            var dayNumber = getNumberValue(infoShort.day, 1);
+            if (dayNumber < 1) { dayNumber = 1; } else if (dayNumber > 31) { dayNumber = 31; }
+
+            if (dayNumber != cachedDayValue) {
+                dayChanged = true;
+                cachedDayValue = dayNumber;
+                cachedDayString = dayNumber.format("%d");
+                var dayMetrics = getDateDigitLineMetrics(cachedDayString);
+                cachedDayWidth = dayMetrics["width"];
+                cachedDayHeight = dayMetrics["height"];
+            }
+        }
+        return dayChanged;
+    }
+
+    private function updateAstronomicalData(dayChanged as Boolean) as Void {
+        if (dayChanged || cachedMoonPhaseFrac < 0) {
+            cachedMoonPhaseFrac = MoonPhase.computeMoonPhaseFraction();
+        }
+        if (dayChanged || cachedTzolkin.size() == 0) {
+            cachedTzolkin = MayaCalendar.computeCurrentTzolkin();
+        }
+        if (dayChanged || cachedHaab.size() == 0) {
+            cachedHaab = MayaCalendar.computeCurrentHaab();
+        }
+        if (dayChanged || cachedZodiac.size() == 0) {
+            cachedZodiac = Zodiac.getCurrentZodiac();
+        }
+    }
+
+    private function drawTimeElements(dc as Dc, startY as Number, digitHeight as Number) as Void {
+        drawDigitLine(dc, cachedHoursString, startY, cachedHoursWidth, digitHeight);
+        drawDigitLine(dc, cachedMinutesString, startY + digitHeight + lineSpacing + minutesVerticalOffset, cachedMinutesWidth, digitHeight);
+    }
+
+    private function drawDateElements(dc as Dc, height as Number) as Void {
+        var weekdayBitmap = weekdayBitmaps[cachedWeekdayIndex];
+        var monthBitmap = monthBitmaps[cachedMonthIndex];
+        var monthWidth = monthBitmap.getWidth();
+
+        var dateRight = dc.getWidth() - dateMargin;
+
+        var symbolHeight = weekdayBitmap.getHeight();
+        var symbolWidth = weekdayBitmap.getWidth();
+        var dayHeight = cachedDayHeight;
+
+        var maxWidth = symbolWidth;
+        if (cachedDayWidth > maxWidth) {
+            maxWidth = cachedDayWidth;
+        }
+        if (monthWidth > maxWidth) {
+            maxWidth = monthWidth;
+        }
+
+        var dateLeft = dateRight - maxWidth;
+        var dateCenter = dateLeft + roundScaled(maxWidth / 2.0);
+
+        var symbolLeft = dateCenter - roundScaled(symbolWidth / 2.0);
+        var dayLeft = dateCenter - roundScaled(cachedDayWidth / 2.0);
+        var monthLeft = dateCenter - roundScaled(monthWidth / 2.0);
+
+        var dayCenterY = roundScaled(height / 2.0) + dateVerticalOffset;
+        var dayTop = dayCenterY - roundScaled(dayHeight / 2.0);
+
+        var symbolTop = dayTop - dateGap - symbolHeight;
+        var monthTop = dayTop + dayHeight + dateGap + roundScaled(3 * layoutScale);
+
+        dc.drawBitmap(symbolLeft as Number, symbolTop as Number, weekdayBitmap);
+        drawDateDigitLine(dc, cachedDayString, dayLeft as Number, dayTop as Number, cachedDayWidth, cachedDayHeight);
+        dc.drawBitmap(monthLeft as Number, monthTop as Number, monthBitmap);
     }
 }
