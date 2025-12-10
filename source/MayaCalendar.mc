@@ -6,12 +6,7 @@ class MayaCalendar {
     static const MAYA_EPOCH_JD = 584283;
 
     static function computeCurrentTzolkin() as Dictionary {
-        var now = Time.now();
-        var unix = now.value();
-        var daysSince1970 = unix / 86400;
-        var remainder = unix % 86400;
-        var jdFloor = daysSince1970 + 2440587 + (remainder >= 43200 ? 1 : 0);
-        var dayCount = jdFloor - MAYA_EPOCH_JD;
+        var dayCount = getDayCountSinceEpoch();
         var tzolkinDay = (dayCount + 159) % (260 as Long);
         if (tzolkinDay < 0) {
             tzolkinDay = tzolkinDay + (260 as Long);
@@ -25,13 +20,8 @@ class MayaCalendar {
     }
 
     static function computeCurrentHaab() as Dictionary {
-        var now = Time.now();
-        var unix = now.value();
-        var daysSince1970 = unix / 86400;
-        var remainder = unix % 86400;
-        var jdFloor2 = daysSince1970 + 2440587 + (remainder >= 43200 ? 1 : 0);
-        var dayCount2 = jdFloor2 - MAYA_EPOCH_JD;
-        var haabDay = (dayCount2 + 347) % (365 as Long);
+        var dayCount = getDayCountSinceEpoch();
+        var haabDay = (dayCount + 347) % (365 as Long);
         if (haabDay < 0) {
             haabDay = haabDay + (365 as Long);
         }
@@ -44,5 +34,13 @@ class MayaCalendar {
             "monthIndex" => monthIndex,
             "dayInMonth" => dayInMonth
         };
+    }
+
+    private static function getDayCountSinceEpoch() as Long {
+        var epoch = Time.now().value();
+        var daysSinceEpoch = epoch / 86400;
+        var jdFloor = daysSinceEpoch + 2440587;
+        var dayCount = jdFloor - MAYA_EPOCH_JD;
+        return dayCount as Long;
     }
 }
