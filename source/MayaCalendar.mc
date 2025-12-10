@@ -7,7 +7,7 @@ class MayaCalendar {
 
     static function computeCurrentTzolkin() as Dictionary {
         var dayCount = getDayCountSinceEpoch();
-        var tzolkinDay = (dayCount + 159) % (260 as Long);
+        var tzolkinDay = (dayCount + 160) % (260 as Long);
         if (tzolkinDay < 0) {
             tzolkinDay = tzolkinDay + (260 as Long);
         }
@@ -21,7 +21,7 @@ class MayaCalendar {
 
     static function computeCurrentHaab() as Dictionary {
         var dayCount = getDayCountSinceEpoch();
-        var haabDay = (dayCount + 347) % (365 as Long);
+        var haabDay = (dayCount + 348) % (365 as Long);
         if (haabDay < 0) {
             haabDay = haabDay + (365 as Long);
         }
