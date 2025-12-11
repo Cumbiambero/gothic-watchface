@@ -26,7 +26,6 @@ A minimalist, gothic style Garmin Connect IQ watch face showing:
 - Fix bug in Maya calendar
 - Support more devices
 
-
 ## Supported Devices
 Fenix 7 series and more
 
