@@ -22,6 +22,11 @@ A minimalist, gothic style Garmin Connect IQ watch face showing:
 - Add Maya calendar (Tzolk'in and Haab)
 - Add Zodiac
 
+### 1.3.0
+- Fix bug in Maya calendar
+- Support more devices
+
+
 ## Supported Devices
 Fenix 7 series and more
 
