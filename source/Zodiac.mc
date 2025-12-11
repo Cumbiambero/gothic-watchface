@@ -28,6 +28,6 @@ class Zodiac {
         if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) { return 9; } // Capricorn
         if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) { return 10; } // Aquarius
         if ((month == 2 && day >= 19) || (month == 3 && day <= 20)) { return 11; } // Pisces
-        return 0; // Default
+        return 0;
     }
 }

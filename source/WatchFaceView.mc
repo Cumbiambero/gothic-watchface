@@ -11,7 +11,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     private const LINE_SPACING = -40;
     private const MINUTES_VERTICAL_OFFSET = 32;
     private const TIME_BLOCK_SHIFT = 7;
-    private const DATE_MARGIN = 16;
+    private const DATE_MARGIN = 10;
     private const DATE_GAP = -10;
     private const DATE_VERTICAL_OFFSET = 12;
     private const DATE_DIGIT_SPACING = -10;
@@ -28,16 +28,9 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var dateGap as Number = 0;
     private var dateVerticalOffset as Number = 0;
     private var dateDigitSpacing as Number = 0;
-    private var layoutScale as Number = 1;
-    private var digitBitmaps as Array<WatchUi.BitmapResource>;
-    private var digitWidths as Array<Number>;
-    private var digitHeights as Array<Number>;
+    private var layoutScale as Float = 1.0;
+    private var bitmapScale as Float = 1.0;
     private var digitLookup as Dictionary;
-    private var weekdayBitmaps as Array<WatchUi.BitmapResource>;
-    private var dateDigitBitmaps as Array<WatchUi.BitmapResource>;
-    private var dateDigitWidths as Array<Number>;
-    private var dateDigitHeights as Array<Number>;
-    private var monthBitmaps as Array<WatchUi.BitmapResource>;
     private var cachedHourValue as Number;
     private var cachedMinuteValue as Number;
     private var cachedHoursString as String;
@@ -55,27 +48,45 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var cachedTzolkin as Dictionary = {} as Dictionary;
     private var cachedHaab as Dictionary = {} as Dictionary;
     private var cachedZodiac as Dictionary = {} as Dictionary;
-    private var mayaNumberBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
-    private var mayaDayBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
-    private var mayaMonthBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
-    private var zodiacBitmaps as Array<WatchUi.BitmapResource> = [] as Array<WatchUi.BitmapResource>;
 
     private function roundScaled(n) as Number {
         return (Math.floor(n + 0.5)) as Number;
     }
 
+    private var canScaleBitmaps as Boolean = false;
+    private var scalingChecked as Boolean = false;
+
+    private function checkScalingSupport(dc as Dc) as Void {
+        if (!scalingChecked) {
+            canScaleBitmaps = (dc has :drawScaledBitmap);
+            scalingChecked = true;
+            if (!canScaleBitmaps) {
+                bitmapScale = 1.0;
+            }
+        }
+    }
+
+    private function drawScaledBitmap(dc as Dc, x as Number, y as Number, bmp as WatchUi.BitmapResource) as Void {
+        if (!canScaleBitmaps || (bitmapScale >= 0.99 && bitmapScale <= 1.01)) {
+            dc.drawBitmap(x, y, bmp);
+        } else {
+            var w = roundScaled(bmp.getWidth() * bitmapScale);
+            var h = roundScaled(bmp.getHeight() * bitmapScale);
+            dc.drawScaledBitmap(x, y, w, h, bmp);
+        }
+    }
+
+    private function getScaledWidth(bmp as WatchUi.BitmapResource) as Number {
+        return roundScaled(bmp.getWidth() * bitmapScale);
+    }
+
+    private function getScaledHeight(bmp as WatchUi.BitmapResource) as Number {
+        return roundScaled(bmp.getHeight() * bitmapScale);
+    }
 
     function initialize() {
         WatchFace.initialize();
 
-        digitBitmaps = [] as Array<WatchUi.BitmapResource>;
-        digitWidths = [] as Array<Number>;
-        digitHeights = [] as Array<Number>;
-        weekdayBitmaps = [] as Array<WatchUi.BitmapResource>;
-        dateDigitBitmaps = [] as Array<WatchUi.BitmapResource>;
-        dateDigitWidths = [] as Array<Number>;
-        dateDigitHeights = [] as Array<Number>;
-        monthBitmaps = [] as Array<WatchUi.BitmapResource>;
         cachedMoonPhaseFrac = -1;
         cachedHourValue = -1;
         cachedMinuteValue = -1;
@@ -109,12 +120,14 @@ class WatchFaceView extends WatchUi.WatchFace {
     function onLayout(dc as Dc) as Void {
         var w = dc.getWidth();
         var h = dc.getHeight();
-        var baseSize = 280.0; 
-        layoutScale = (((w < h) ? w : h) / baseSize) as Number;
-        if (layoutScale <= 0) { 
-            layoutScale = 1;
+        var baseSize = 280.0;
+        var screenSize = ((w < h) ? w : h) as Float;
+        layoutScale = screenSize / baseSize;
+        if (layoutScale <= 0.0) { 
+            layoutScale = 1.0;
         }
-
+        
+        bitmapScale = layoutScale;
         digitSpacing = roundScaled(DIGIT_SPACING * layoutScale);
         lineSpacing = roundScaled(LINE_SPACING * layoutScale);
         minutesVerticalOffset = roundScaled(MINUTES_VERTICAL_OFFSET * layoutScale);
@@ -125,35 +138,25 @@ class WatchFaceView extends WatchUi.WatchFace {
         dateVerticalOffset = roundScaled(DATE_VERTICAL_OFFSET * layoutScale);
         dateDigitSpacing = roundScaled(DATE_DIGIT_SPACING * layoutScale);
         Resources.ensureLoaded();
-        digitBitmaps = Resources.digitBitmaps as Array<WatchUi.BitmapResource>;
-        digitWidths = Resources.digitWidths as Array<Number>;
-        digitHeights = Resources.digitHeights as Array<Number>;
-        weekdayBitmaps = Resources.weekdayBitmaps as Array<WatchUi.BitmapResource>;
-        dateDigitBitmaps = Resources.dateDigitBitmaps as Array<WatchUi.BitmapResource>;
-        dateDigitWidths = Resources.dateDigitWidths as Array<Number>;
-        dateDigitHeights = Resources.dateDigitHeights as Array<Number>;
-        monthBitmaps = Resources.monthBitmaps as Array<WatchUi.BitmapResource>;
-        mayaNumberBitmaps = Resources.mayaNumberBitmaps as Array<WatchUi.BitmapResource>;
-        mayaDayBitmaps = Resources.mayaDayBitmaps as Array<WatchUi.BitmapResource>;
-        mayaMonthBitmaps = Resources.mayaMonthBitmaps as Array<WatchUi.BitmapResource>;
-        zodiacBitmaps = Resources.zodiacBitmaps as Array<WatchUi.BitmapResource>;
     }
 
     function onShow() as Void {
     }
 
     function onUpdate(dc as Dc) as Void {
+        checkScalingSupport(dc);
         clearScreen(dc);
 
         var height = dc.getHeight();
-
         var hourChanged = updateTimeCache(System.getClockTime());
         var dayChanged = updateDateCache(hourChanged);
         updateAstronomicalData(dayChanged);
 
-        var digitHeight = digitHeights[0];
+        var firstDigit = Resources.getDigitBitmap(0);
+        var digitHeight = roundScaled(firstDigit.getHeight() * bitmapScale);
         var totalHeight = digitHeight + digitHeight + lineSpacing + minutesVerticalOffset;
-        var startY = roundScaled((height - totalHeight) / 2) - roundScaled(15 * layoutScale) + timeBlockShift;
+        var verticalOffset = roundScaled(10 * layoutScale);
+        var startY = roundScaled((height - totalHeight) / 2) - verticalOffset + timeBlockShift;
         var hoursStartX = roundScaled((dc.getWidth() - stableHoursWidth) / 2);
         var lineRight = hoursStartX - roundScaled(LEFT_COLUMN_GAP * layoutScale);
 
@@ -168,20 +171,20 @@ class WatchFaceView extends WatchUi.WatchFace {
         }
 
         if (cachedTzolkin.size() > 0) {
-            var tzNumberBmp = mayaNumberBitmaps[cachedTzolkin["number"]];
-            var tzNameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
-            var tzTotalW = tzNumberBmp.getWidth() + tzNameBmp.getWidth();
+            var tzNumberBmp = Resources.getMayaNumberBitmap(cachedTzolkin["number"] as Number);
+            var tzNameBmp = Resources.getMayaDayBitmap(cachedTzolkin["nameIndex"] as Number);
+            var tzTotalW = getScaledWidth(tzNumberBmp) + getScaledWidth(tzNameBmp);
             if (tzTotalW > columnMaxWidth) { columnMaxWidth = tzTotalW; }
 
-            var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"]];
-            var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
-            var haabTotalW = haabNumberBmp.getWidth() + haabMonthBmp.getWidth();
+            var haabNumberBmp = Resources.getMayaNumberBitmap(cachedHaab["dayInMonth"] as Number);
+            var haabMonthBmp = Resources.getMayaMonthBitmap(cachedHaab["monthIndex"] as Number);
+            var haabTotalW = getScaledWidth(haabNumberBmp) + getScaledWidth(haabMonthBmp);
             if (haabTotalW > columnMaxWidth) { columnMaxWidth = haabTotalW; }
         }
 
         if (cachedZodiac.size() > 0) {
-            var zodiacBitmap = zodiacBitmaps[cachedZodiac["index"]];
-            if (zodiacBitmap.getWidth() > columnMaxWidth) { columnMaxWidth = zodiacBitmap.getWidth(); }
+            var zodiacBitmap = Resources.getZodiacBitmap(cachedZodiac["index"] as Number);
+            if (getScaledWidth(zodiacBitmap) > columnMaxWidth) { columnMaxWidth = getScaledWidth(zodiacBitmap); }
         }
 
         var columnLeftPosition = lineRight - columnMaxWidth;
@@ -198,9 +201,9 @@ class WatchFaceView extends WatchUi.WatchFace {
             drawMaya(dc, anchorCenterX, tzolkinY, haabY);
 
             if (cachedZodiac.size() > 0) {
-                var zodiacBitmap2 = zodiacBitmaps[cachedZodiac["index"]];
-                var zX = anchorCenterX - roundScaled(zodiacBitmap2.getWidth() / 2.0);
-                dc.drawBitmap(zX, centerY + roundScaled(30 * layoutScale), zodiacBitmap2);
+                var zodiacBitmap2 = Resources.getZodiacBitmap(cachedZodiac["index"] as Number);
+                var zX = anchorCenterX - roundScaled(getScaledWidth(zodiacBitmap2) / 2.0);
+                drawScaledBitmap(dc, zX, centerY + roundScaled(38 * layoutScale), zodiacBitmap2);
             }
         }
 
@@ -258,8 +261,9 @@ class WatchFaceView extends WatchUi.WatchFace {
         for (var i = 0; i < length; ++i) {
             var digitChar = text.substring(i, i + 1);
             var idx = digitLookup[digitChar];
-            var w = digitWidths[idx];
-            var h = digitHeights[idx];
+            var bmp = Resources.getDigitBitmap(idx as Number);
+            var w = roundScaled(bmp.getWidth() * bitmapScale);
+            var h = roundScaled(bmp.getHeight() * bitmapScale);
 
             totalWidth += w;
             if (i < length - 1) {
@@ -278,7 +282,7 @@ class WatchFaceView extends WatchUi.WatchFace {
 
     function drawDigitLine(dc as Dc, text as String, top, lineWidth as Number, lineHeight as Number) as Void {
         var startX = roundScaled((dc.getWidth() - lineWidth) / 2);
-        drawBitmapDigits(dc, text, startX, top, lineHeight, digitBitmaps, digitWidths, digitHeights, digitSpacing);
+        drawTimeDigits(dc, text, startX, top as Number, lineHeight);
     }
 
     function getDateDigitLineMetrics(text as String) as Dictionary {
@@ -294,8 +298,9 @@ class WatchFaceView extends WatchUi.WatchFace {
             }
 
             var indexNumber = idx as Number;
-            var w = dateDigitWidths[indexNumber];
-            var h = dateDigitHeights[indexNumber];
+            var bmp = Resources.getDateDigitBitmap(indexNumber);
+            var w = roundScaled(bmp.getWidth() * bitmapScale);
+            var h = roundScaled(bmp.getHeight() * bitmapScale);
 
             totalWidth += w;
             if (i < length - 1) {
@@ -314,47 +319,65 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     function drawDateDigitLine(dc as Dc, text as String, leftX, top, lineWidth as Number, lineHeight as Number) as Void {
-        var startX = leftX as Number;
-        drawBitmapDigits(dc, text, startX, top, lineHeight, dateDigitBitmaps, dateDigitWidths, dateDigitHeights, dateDigitSpacing);
+        drawDateDigits(dc, text, leftX as Number, top as Number, lineHeight);
     }
 
-    function drawBitmapDigits(dc as Dc, text as String, startX as Number, top as Number, lineHeight as Number,
-            bitmaps as Array<WatchUi.BitmapResource>, widths as Array<Number>, heights as Array<Number>, spacing as Number) as Void {
+    function drawTimeDigits(dc as Dc, text as String, startX as Number, top as Number, lineHeight as Number) as Void {
         var length = text.length();
         for (var i = 0; i < length; ++i) {
             var digitChar = text.substring(i, i + 1);
             var idx = digitLookup.get(digitChar);
-
             if (idx == null) {
                 continue;
             }
-
             var indexNumber = idx as Number;
-            var bmp = bitmaps[indexNumber];
-            var bmpHeight = heights[indexNumber];
+            var bmp = Resources.getDigitBitmap(indexNumber);
+            var bmpHeight = roundScaled(bmp.getHeight() * bitmapScale);
+            var bmpWidth = roundScaled(bmp.getWidth() * bitmapScale);
             var drawY = top + roundScaled((lineHeight - bmpHeight) / 2.0);
-            dc.drawBitmap(startX, drawY, bmp);
-            startX += widths[indexNumber];
+            drawScaledBitmap(dc, startX, drawY, bmp);
+            startX += bmpWidth;
             if (i < length - 1) {
-                startX += spacing;
+                startX += digitSpacing;
+            }
+        }
+    }
+
+    function drawDateDigits(dc as Dc, text as String, startX as Number, top as Number, lineHeight as Number) as Void {
+        var length = text.length();
+        for (var i = 0; i < length; ++i) {
+            var digitChar = text.substring(i, i + 1);
+            var idx = digitLookup.get(digitChar);
+            if (idx == null) {
+                continue;
+            }
+            var indexNumber = idx as Number;
+            var bmp = Resources.getDateDigitBitmap(indexNumber);
+            var bmpHeight = roundScaled(bmp.getHeight() * bitmapScale);
+            var bmpWidth = roundScaled(bmp.getWidth() * bitmapScale);
+            var drawY = top + roundScaled((lineHeight - bmpHeight) / 2.0);
+            drawScaledBitmap(dc, startX, drawY, bmp);
+            startX += bmpWidth;
+            if (i < length - 1) {
+                startX += dateDigitSpacing;
             }
         }
     }
 
     function drawMaya(dc as Dc, centerX as Number, tzolkinY as Number, haabY as Number) as Void {
-        var numberBmp = mayaNumberBitmaps[cachedTzolkin["number"]];
-        var nameBmp = mayaDayBitmaps[cachedTzolkin["nameIndex"]];
-        var tzolkinTotalW = numberBmp.getWidth() + nameBmp.getWidth();
+        var numberBmp = Resources.getMayaNumberBitmap(cachedTzolkin["number"] as Number);
+        var nameBmp = Resources.getMayaDayBitmap(cachedTzolkin["nameIndex"] as Number);
+        var tzolkinTotalW = getScaledWidth(numberBmp) + getScaledWidth(nameBmp);
         var tzolkinLeft = centerX - roundScaled(tzolkinTotalW / 2.0);
-        dc.drawBitmap(tzolkinLeft, tzolkinY, numberBmp);
-        dc.drawBitmap(tzolkinLeft + numberBmp.getWidth(), tzolkinY, nameBmp);
+        drawScaledBitmap(dc, tzolkinLeft, tzolkinY, numberBmp);
+        drawScaledBitmap(dc, tzolkinLeft + getScaledWidth(numberBmp), tzolkinY, nameBmp);
 
-        var haabNumberBmp = mayaNumberBitmaps[cachedHaab["dayInMonth"]];
-        var haabMonthBmp = mayaMonthBitmaps[cachedHaab["monthIndex"]];
-        var haabTotalW = haabNumberBmp.getWidth() + haabMonthBmp.getWidth();
+        var haabNumberBmp = Resources.getMayaNumberBitmap(cachedHaab["dayInMonth"] as Number);
+        var haabMonthBmp = Resources.getMayaMonthBitmap(cachedHaab["monthIndex"] as Number);
+        var haabTotalW = getScaledWidth(haabNumberBmp) + getScaledWidth(haabMonthBmp);
         var haabLeft = centerX - roundScaled(haabTotalW / 2.0);
-        dc.drawBitmap(haabLeft, haabY, haabNumberBmp);
-        dc.drawBitmap(haabLeft + haabNumberBmp.getWidth(), haabY, haabMonthBmp);
+        drawScaledBitmap(dc, haabLeft, haabY, haabNumberBmp);
+        drawScaledBitmap(dc, haabLeft + getScaledWidth(haabNumberBmp), haabY, haabMonthBmp);
     }
 
     private function updateTimeCache(clockTime as System.ClockTime) as Boolean {
@@ -392,13 +415,13 @@ class WatchFaceView extends WatchUi.WatchFace {
             var infoShort = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT) as Time.Gregorian.Info;
 
             var weekdayIndex = getNumberValue(infoShort.day_of_week, 1) - 1;
-            if (weekdayIndex < 0 || weekdayIndex >= weekdayBitmaps.size()) {
+            if (weekdayIndex < 0 || weekdayIndex >= 7) {
                 weekdayIndex = 0;
             }
             cachedWeekdayIndex = weekdayIndex;
 
             var monthIndex = getNumberValue(infoShort.month, 1) - 1;
-            if (monthIndex < 0 || monthIndex >= monthBitmaps.size()) {
+            if (monthIndex < 0 || monthIndex >= 12) {
                 monthIndex = 0;
             }
             cachedMonthIndex = monthIndex;
@@ -439,14 +462,14 @@ class WatchFaceView extends WatchUi.WatchFace {
     }
 
     private function drawDateElements(dc as Dc, height as Number) as Void {
-        var weekdayBitmap = weekdayBitmaps[cachedWeekdayIndex];
-        var monthBitmap = monthBitmaps[cachedMonthIndex];
-        var monthWidth = monthBitmap.getWidth();
+        var weekdayBitmap = Resources.getWeekdayBitmap(cachedWeekdayIndex);
+        var monthBitmap = Resources.getMonthBitmap(cachedMonthIndex);
+        var monthWidth = getScaledWidth(monthBitmap);
 
         var dateRight = dc.getWidth() - dateMargin;
 
-        var symbolHeight = weekdayBitmap.getHeight();
-        var symbolWidth = weekdayBitmap.getWidth();
+        var symbolHeight = getScaledHeight(weekdayBitmap);
+        var symbolWidth = getScaledWidth(weekdayBitmap);
         var dayHeight = cachedDayHeight;
 
         var maxWidth = symbolWidth;
@@ -470,8 +493,8 @@ class WatchFaceView extends WatchUi.WatchFace {
         var symbolTop = dayTop - dateGap - symbolHeight;
         var monthTop = dayTop + dayHeight + dateGap + roundScaled(3 * layoutScale);
 
-        dc.drawBitmap(symbolLeft as Number, symbolTop as Number, weekdayBitmap);
+        drawScaledBitmap(dc, symbolLeft as Number, symbolTop as Number, weekdayBitmap);
         drawDateDigitLine(dc, cachedDayString, dayLeft as Number, dayTop as Number, cachedDayWidth, cachedDayHeight);
-        dc.drawBitmap(monthLeft as Number, monthTop as Number, monthBitmap);
+        drawScaledBitmap(dc, monthLeft as Number, monthTop as Number, monthBitmap);
     }
 }
