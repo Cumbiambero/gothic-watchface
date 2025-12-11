@@ -11,7 +11,7 @@ class MayaCalendar {
         if (tzolkinDay < 0) {
             tzolkinDay = tzolkinDay + (260 as Long);
         }
-        var number = ((tzolkinDay % (13 as Long)) + (1 as Long)) as Number;
+        var number = ((tzolkinDay % (13 as Long)) + 1) as Number;
         var nameIndex = (tzolkinDay % (20 as Long)) as Number;
         return {
             "number" => number,
@@ -25,10 +25,10 @@ class MayaCalendar {
         if (haabDay < 0) {
             haabDay = haabDay + (365 as Long);
         }
-        var monthIndex = (haabDay / (20 as Long)) as Long;
-        var dayInMonth = ((haabDay % (20 as Long)) + (1 as Long)) as Number;
-        if (monthIndex == (18 as Long)) {
-            dayInMonth = ((haabDay - (360 as Long)) + (1 as Long)) as Number;
+        var monthIndex = (haabDay / (20 as Long)) as Number;
+        var dayInMonth = ((haabDay % (20 as Long)) + 1) as Number;
+        if (monthIndex == 18) {
+            dayInMonth = ((haabDay - 360) + 1) as Number;
         }
         return {
             "monthIndex" => monthIndex,

@@ -59,6 +59,7 @@
     <bitmap id="MayaNumber17" filename="maya/number_17.png" />
     <bitmap id="MayaNumber18" filename="maya/number_18.png" />
     <bitmap id="MayaNumber19" filename="maya/number_19.png" />
+    <bitmap id="MayaNumber20" filename="maya/number_0.png" />
     <bitmap id="MayaDay1" filename="maya/days/imix.png" />
     <bitmap id="MayaDay2" filename="maya/days/ik.png" />
     <bitmap id="MayaDay3" filename="maya/days/akbal.png" />

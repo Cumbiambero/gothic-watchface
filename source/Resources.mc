@@ -20,7 +20,45 @@ class Resources {
 
     static var zodiacBitmaps as Array = [] as Array;
 
-    static function ensureLoaded(weekdayIds as Array, dateDigitIds as Array, monthIds as Array) as Void {
+    private static const WEEKDAY_RESOURCE_IDS = [
+        Rez.Drawables.Weekday1,
+        Rez.Drawables.Weekday2,
+        Rez.Drawables.Weekday3,
+        Rez.Drawables.Weekday4,
+        Rez.Drawables.Weekday5,
+        Rez.Drawables.Weekday6,
+        Rez.Drawables.Weekday7
+    ];
+
+    private static const DATE_DIGIT_RESOURCE_IDS = [
+        Rez.Drawables.DateDigit0,
+        Rez.Drawables.DateDigit1,
+        Rez.Drawables.DateDigit2,
+        Rez.Drawables.DateDigit3,
+        Rez.Drawables.DateDigit4,
+        Rez.Drawables.DateDigit5,
+        Rez.Drawables.DateDigit6,
+        Rez.Drawables.DateDigit7,
+        Rez.Drawables.DateDigit8,
+        Rez.Drawables.DateDigit9
+    ];
+
+    private static const MONTH_RESOURCE_IDS = [
+        Rez.Drawables.Month01,
+        Rez.Drawables.Month02,
+        Rez.Drawables.Month03,
+        Rez.Drawables.Month04,
+        Rez.Drawables.Month05,
+        Rez.Drawables.Month06,
+        Rez.Drawables.Month07,
+        Rez.Drawables.Month08,
+        Rez.Drawables.Month09,
+        Rez.Drawables.Month10,
+        Rez.Drawables.Month11,
+        Rez.Drawables.Month12
+    ];
+
+    static function ensureLoaded() as Void {
         if (loaded) {
             return;
         }
@@ -42,19 +80,19 @@ class Resources {
             digitHeights.add(bmp.getHeight());
         }
 
-        for (var i = 0; i < weekdayIds.size(); ++i) {
-            weekdayBitmaps.add(WatchUi.loadResource(weekdayIds[i]) as WatchUi.BitmapResource);
+        for (var i = 0; i < WEEKDAY_RESOURCE_IDS.size(); ++i) {
+            weekdayBitmaps.add(WatchUi.loadResource(WEEKDAY_RESOURCE_IDS[i]) as WatchUi.BitmapResource);
         }
 
-        for (var i = 0; i < dateDigitIds.size(); ++i) {
-            var dateBmp = WatchUi.loadResource(dateDigitIds[i]) as WatchUi.BitmapResource;
+        for (var i = 0; i < DATE_DIGIT_RESOURCE_IDS.size(); ++i) {
+            var dateBmp = WatchUi.loadResource(DATE_DIGIT_RESOURCE_IDS[i]) as WatchUi.BitmapResource;
             dateDigitBitmaps.add(dateBmp);
             dateDigitWidths.add(dateBmp.getWidth());
             dateDigitHeights.add(dateBmp.getHeight());
         }
 
-        for (var i = 0; i < monthIds.size(); ++i) {
-            monthBitmaps.add(WatchUi.loadResource(monthIds[i]) as WatchUi.BitmapResource);
+        for (var i = 0; i < MONTH_RESOURCE_IDS.size(); ++i) {
+            monthBitmaps.add(WatchUi.loadResource(MONTH_RESOURCE_IDS[i]) as WatchUi.BitmapResource);
         }
 
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber0) as WatchUi.BitmapResource);
@@ -77,6 +115,7 @@ class Resources {
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber17) as WatchUi.BitmapResource);
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber18) as WatchUi.BitmapResource);
         mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber19) as WatchUi.BitmapResource);
+        mayaNumberBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaNumber20) as WatchUi.BitmapResource);
 
         mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay1) as WatchUi.BitmapResource);
         mayaDayBitmaps.add(WatchUi.loadResource(Rez.Drawables.MayaDay2) as WatchUi.BitmapResource);

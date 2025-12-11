@@ -63,41 +63,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     private function roundScaled(n) as Number {
         return (Math.floor(n + 0.5)) as Number;
     }
-    private const WEEKDAY_RESOURCE_IDS = [
-        Rez.Drawables.Weekday1,
-        Rez.Drawables.Weekday2,
-        Rez.Drawables.Weekday3,
-        Rez.Drawables.Weekday4,
-        Rez.Drawables.Weekday5,
-        Rez.Drawables.Weekday6,
-        Rez.Drawables.Weekday7
-    ];
-    private const MONTH_RESOURCE_IDS = [
-        Rez.Drawables.Month01,
-        Rez.Drawables.Month02,
-        Rez.Drawables.Month03,
-        Rez.Drawables.Month04,
-        Rez.Drawables.Month05,
-        Rez.Drawables.Month06,
-        Rez.Drawables.Month07,
-        Rez.Drawables.Month08,
-        Rez.Drawables.Month09,
-        Rez.Drawables.Month10,
-        Rez.Drawables.Month11,
-        Rez.Drawables.Month12
-    ];
-    private const DATE_DIGIT_RESOURCE_IDS = [
-        Rez.Drawables.DateDigit0,
-        Rez.Drawables.DateDigit1,
-        Rez.Drawables.DateDigit2,
-        Rez.Drawables.DateDigit3,
-        Rez.Drawables.DateDigit4,
-        Rez.Drawables.DateDigit5,
-        Rez.Drawables.DateDigit6,
-        Rez.Drawables.DateDigit7,
-        Rez.Drawables.DateDigit8,
-        Rez.Drawables.DateDigit9
-    ];
+
 
     function initialize() {
         WatchFace.initialize();
@@ -158,7 +124,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         dateGap = roundScaled(DATE_GAP * layoutScale);
         dateVerticalOffset = roundScaled(DATE_VERTICAL_OFFSET * layoutScale);
         dateDigitSpacing = roundScaled(DATE_DIGIT_SPACING * layoutScale);
-        Resources.ensureLoaded(WEEKDAY_RESOURCE_IDS, DATE_DIGIT_RESOURCE_IDS, MONTH_RESOURCE_IDS);
+        Resources.ensureLoaded();
         digitBitmaps = Resources.digitBitmaps as Array<WatchUi.BitmapResource>;
         digitWidths = Resources.digitWidths as Array<Number>;
         digitHeights = Resources.digitHeights as Array<Number>;
@@ -171,19 +137,6 @@ class WatchFaceView extends WatchUi.WatchFace {
         mayaDayBitmaps = Resources.mayaDayBitmaps as Array<WatchUi.BitmapResource>;
         mayaMonthBitmaps = Resources.mayaMonthBitmaps as Array<WatchUi.BitmapResource>;
         zodiacBitmaps = Resources.zodiacBitmaps as Array<WatchUi.BitmapResource>;
-
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac0) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac1) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac2) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac3) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac4) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac5) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac6) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac7) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac8) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac9) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac10) as WatchUi.BitmapResource);
-        zodiacBitmaps.add(WatchUi.loadResource(Rez.Drawables.Zodiac11) as WatchUi.BitmapResource);
     }
 
     function onShow() as Void {
