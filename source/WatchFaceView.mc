@@ -44,7 +44,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     private var cachedDayHeight as Number;
     private var cachedWeekdayIndex as Number;
     private var cachedMonthIndex as Number;
-    private var cachedMoonPhaseFrac as Number;
+    private var cachedMoonPhaseFrac as Float;
     private var cachedTzolkin as Dictionary = {} as Dictionary;
     private var cachedHaab as Dictionary = {} as Dictionary;
     private var cachedZodiac as Dictionary = {} as Dictionary;
@@ -66,7 +66,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         }
     }
 
-    private function drawScaledBitmap(dc as Dc, x as Number, y as Number, bmp as WatchUi.BitmapResource) as Void {
+    private function drawBitmapScaled(dc as Dc, x as Number, y as Number, bmp as WatchUi.BitmapResource) as Void {
         if (!canScaleBitmaps || (bitmapScale >= 0.99 && bitmapScale <= 1.01)) {
             dc.drawBitmap(x, y, bmp);
         } else {
@@ -87,7 +87,7 @@ class WatchFaceView extends WatchUi.WatchFace {
     function initialize() {
         WatchFace.initialize();
 
-        cachedMoonPhaseFrac = -1;
+        cachedMoonPhaseFrac = -1.0;
         cachedHourValue = -1;
         cachedMinuteValue = -1;
         cachedHoursString = "";
@@ -101,7 +101,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         cachedDayHeight = 0;
         cachedWeekdayIndex = -1;
         cachedMonthIndex = -1;
-        cachedMoonPhaseFrac = -1;
+        cachedMoonPhaseFrac = -1.0;
         
         digitLookup = {
             "0" => 0,
@@ -203,7 +203,7 @@ class WatchFaceView extends WatchUi.WatchFace {
             if (cachedZodiac.size() > 0) {
                 var zodiacBitmap2 = Resources.getZodiacBitmap(cachedZodiac["index"] as Number);
                 var zX = anchorCenterX - roundScaled(getScaledWidth(zodiacBitmap2) / 2.0);
-                drawScaledBitmap(dc, zX, centerY + roundScaled(38 * layoutScale), zodiacBitmap2);
+                drawBitmapScaled(dc, zX, centerY + roundScaled(38 * layoutScale), zodiacBitmap2);
             }
         }
 
@@ -250,7 +250,7 @@ class WatchFaceView extends WatchUi.WatchFace {
         cachedDayString = "";
         cachedWeekdayIndex = -1;
         cachedMonthIndex = -1;
-        cachedMoonPhaseFrac = -1;
+        cachedMoonPhaseFrac = -1.0;
     }
 
     function getLineMetrics(text as String) as Dictionary {
@@ -335,7 +335,7 @@ class WatchFaceView extends WatchUi.WatchFace {
             var bmpHeight = roundScaled(bmp.getHeight() * bitmapScale);
             var bmpWidth = roundScaled(bmp.getWidth() * bitmapScale);
             var drawY = top + roundScaled((lineHeight - bmpHeight) / 2.0);
-            drawScaledBitmap(dc, startX, drawY, bmp);
+            drawBitmapScaled(dc, startX, drawY, bmp);
             startX += bmpWidth;
             if (i < length - 1) {
                 startX += digitSpacing;
@@ -356,7 +356,7 @@ class WatchFaceView extends WatchUi.WatchFace {
             var bmpHeight = roundScaled(bmp.getHeight() * bitmapScale);
             var bmpWidth = roundScaled(bmp.getWidth() * bitmapScale);
             var drawY = top + roundScaled((lineHeight - bmpHeight) / 2.0);
-            drawScaledBitmap(dc, startX, drawY, bmp);
+            drawBitmapScaled(dc, startX, drawY, bmp);
             startX += bmpWidth;
             if (i < length - 1) {
                 startX += dateDigitSpacing;
@@ -369,15 +369,15 @@ class WatchFaceView extends WatchUi.WatchFace {
         var nameBmp = Resources.getMayaDayBitmap(cachedTzolkin["nameIndex"] as Number);
         var tzolkinTotalW = getScaledWidth(numberBmp) + getScaledWidth(nameBmp);
         var tzolkinLeft = centerX - roundScaled(tzolkinTotalW / 2.0);
-        drawScaledBitmap(dc, tzolkinLeft, tzolkinY, numberBmp);
-        drawScaledBitmap(dc, tzolkinLeft + getScaledWidth(numberBmp), tzolkinY, nameBmp);
+        drawBitmapScaled(dc, tzolkinLeft, tzolkinY, numberBmp);
+        drawBitmapScaled(dc, tzolkinLeft + getScaledWidth(numberBmp), tzolkinY, nameBmp);
 
         var haabNumberBmp = Resources.getMayaNumberBitmap(cachedHaab["dayInMonth"] as Number);
         var haabMonthBmp = Resources.getMayaMonthBitmap(cachedHaab["monthIndex"] as Number);
         var haabTotalW = getScaledWidth(haabNumberBmp) + getScaledWidth(haabMonthBmp);
         var haabLeft = centerX - roundScaled(haabTotalW / 2.0);
-        drawScaledBitmap(dc, haabLeft, haabY, haabNumberBmp);
-        drawScaledBitmap(dc, haabLeft + getScaledWidth(haabNumberBmp), haabY, haabMonthBmp);
+        drawBitmapScaled(dc, haabLeft, haabY, haabNumberBmp);
+        drawBitmapScaled(dc, haabLeft + getScaledWidth(haabNumberBmp), haabY, haabMonthBmp);
     }
 
     private function updateTimeCache(clockTime as System.ClockTime) as Boolean {
@@ -493,8 +493,8 @@ class WatchFaceView extends WatchUi.WatchFace {
         var symbolTop = dayTop - dateGap - symbolHeight;
         var monthTop = dayTop + dayHeight + dateGap + roundScaled(3 * layoutScale);
 
-        drawScaledBitmap(dc, symbolLeft as Number, symbolTop as Number, weekdayBitmap);
+        drawBitmapScaled(dc, symbolLeft as Number, symbolTop as Number, weekdayBitmap);
         drawDateDigitLine(dc, cachedDayString, dayLeft as Number, dayTop as Number, cachedDayWidth, cachedDayHeight);
-        drawScaledBitmap(dc, monthLeft as Number, monthTop as Number, monthBitmap);
+        drawBitmapScaled(dc, monthLeft as Number, monthTop as Number, monthBitmap);
     }
 }

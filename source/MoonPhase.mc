@@ -4,10 +4,10 @@ import Toybox.Graphics;
 import Toybox.Math;
 
 class MoonPhase {
-    static const SECONDS_SINCE_EPOCH = 947182440;
+    static const SECONDS_SINCE_EPOCH = 1875934260;
     static const SYNODIC_MONTH_DAYS = 29.530588853;
 
-    static function computeMoonPhaseFraction() as Number {
+    static function computeMoonPhaseFraction() as Float {
         var nowMoment = Time.now();
         var nowSecs = (nowMoment != null) ? nowMoment.value() : 0.0;
         var daysSince = (nowSecs - SECONDS_SINCE_EPOCH) / 86400.0;
@@ -16,10 +16,10 @@ class MoonPhase {
         if (frac < 0) {
             frac += 1;
         }
-        return frac as Number;
+        return frac as Float;
     }
 
-    static function drawMoon(dc as Dc, centerX as Number, centerY as Number, diameter as Number, phaseFrac as Number) as Void {
+    static function drawMoon(dc as Dc, centerX as Number, centerY as Number, diameter as Number, phaseFrac as Float) as Void {
         if (phaseFrac < 0) {
             return;
             }
@@ -30,7 +30,7 @@ class MoonPhase {
         var radius = (diameter / 2.0) as Number;
         var waxing = (phaseFrac < 0.5);
         var progress = waxing ? (phaseFrac / 0.5) : ((1 - phaseFrac) / 0.5);
-        if (progress <= 0.02) { 
+        if (progress <= 0.05) { 
             return;
         }
 
